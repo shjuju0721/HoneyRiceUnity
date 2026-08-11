@@ -1,5 +1,5 @@
 using UnityEngine;  // 유니티 기능(GameObject, Vector3 등)을 쓰려면 필요. Python의 import와 같음
-
+using Mediapipe.Unity.Sample.FaceLandmarkDetection;  // MoonClimbFaceRunner를 쓰기 위해
 using TMPro;  // TextMeshPro 기능을 쓰려면 필요. Python의 import와 같음
 
 // 클래스 이름은 반드시 파일 이름(MoonClimbGame.cs)과 똑같아야 함
@@ -16,6 +16,15 @@ public class MoonClimbGame : MonoBehaviour
     public Transform player;        // 플레이어 오브젝트. Inspector에서 드래그로 연결할 것
     private int currentStep = 0;    // 지금 몇 번째 칸에 있는지. private = 외부에서 못 건드림
     public TMP_Text progressText;   // 진행도를 표시할 텍스트. Inspector에서 연결
+    [Header("얼굴 인식 설정")]                    // Inspector에서 구역을 나눠주는 표시
+    public MoonClimbFaceRunner faceRunner;        // jawOpen 값을 읽어올 러너. Inspector에서 연결
+    public float openThreshold = 0.35f;           // 이 값을 넘으면 "입 벌림"으로 판정
+    public float closeThreshold = 0.15f;          // 이 값 아래로 내려가면 "입 다뭄"으로 판정
+    public bool useFaceInput = true;              // 체크 해제하면 스페이스바 모드로 전환 (테스트용)
+
+    // 지금 입이 벌어진 상태인지 기억하는 변수
+    // 이게 디바운스의 핵심: 벌린 상태에서 또 벌려도 카운트 안 됨
+    private bool isMouthOpen = false;
 
     // ===== Play 누르면 딱 1번 실행되는 함수 =====
     void Start()
@@ -27,12 +36,33 @@ public class MoonClimbGame : MonoBehaviour
     // ===== 매 프레임마다 자동 실행 (초당 60번쯤) =====
     void Update()
     {
-        // GetKeyDown = 키를 "누르는 순간" 딱 1번만 true
-        // (GetKey를 쓰면 누르고 있는 동안 계속 true라서 순식간에 20칸 올라감)
-        // 이게 웹 버전의 "벌렸다 다물어야 1회" 디바운스와 같은 역할
+        // 스페이스바는 항상 작동 (테스트용으로 남겨둠)
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ClimbOneStep();  // 아래 함수 호출
+            ClimbOneStep();
+        }
+
+        // 얼굴 입력이 꺼져 있거나 러너가 연결 안 됐으면 여기서 끝
+        if (!useFaceInput || faceRunner == null)
+        {
+            return;
+        }
+
+        // 러너가 저장해둔 최신 jawOpen 값 읽기
+        float jawOpen = faceRunner.latestJawOpen;
+
+        // --- 히스테리시스 디바운스 ---
+        // 입이 닫힌 상태에서 openThreshold를 넘으면 → 벌린 것으로 인정, 한 칸 오르기
+        if (!isMouthOpen && jawOpen > openThreshold)
+        {
+            isMouthOpen = true;   // 상태를 "벌림"으로 변경
+            ClimbOneStep();
+        }
+        // 입이 벌어진 상태에서 closeThreshold 아래로 내려가면 → 다문 것으로 인정
+        // 여기서는 칸을 올리지 않고 상태만 되돌림 (다음 벌리기를 받을 준비)
+        else if (isMouthOpen && jawOpen < closeThreshold)
+        {
+            isMouthOpen = false;
         }
     }
 
