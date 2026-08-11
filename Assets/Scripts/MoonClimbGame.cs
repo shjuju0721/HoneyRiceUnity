@@ -11,11 +11,63 @@ public class MoonClimbGame : MonoBehaviour
     public int totalSteps = 20;     // 계단 총 개수
     public float stepHeightGap = 0.8f;  // 계단 사이 세로 간격 (소수라서 f 필수)
     public float stepSideGap = 0.6f;    // 계단 사이 가로 간격 (지그재그 폭)
+    public Transform player;        // 플레이어 오브젝트. Inspector에서 드래그로 연결할 것
+    private int currentStep = 0;    // 지금 몇 번째 칸에 있는지. private = 외부에서 못 건드림
 
     // ===== Play 누르면 딱 1번 실행되는 함수 =====
     void Start()
     {
         CreateSteps();  // 아래에 직접 만든 함수를 호출. 계단 만들기 시작
+    }
+
+    // ===== 매 프레임마다 자동 실행 (초당 60번쯤) =====
+    void Update()
+    {
+        // GetKeyDown = 키를 "누르는 순간" 딱 1번만 true
+        // (GetKey를 쓰면 누르고 있는 동안 계속 true라서 순식간에 20칸 올라감)
+        // 이게 웹 버전의 "벌렸다 다물어야 1회" 디바운스와 같은 역할
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ClimbOneStep();  // 아래 함수 호출
+        }
+    }
+
+    // ===== 한 칸 올라가는 함수 =====
+    void ClimbOneStep()
+    {
+        // 이미 꼭대기면 더 안 올라감
+        // >= 를 쓰는 이유: currentStep이 20이면 이미 마지막 칸에 도착한 상태
+        if (currentStep >= totalSteps)
+        {
+            return;  // 함수를 여기서 끝내고 빠져나감 (Python의 return과 같음)
+        }
+
+        currentStep = currentStep + 1;  // 칸 수 1 증가
+
+        // --- 플레이어를 다음 칸 위치로 이동 ---
+        // 계단을 만들 때 쓴 계산식과 똑같이 맞춰야 발판 위에 정확히 올라감
+        float posY = (currentStep - 1) * stepHeightGap + 0.5f;  // +0.5f = 발판 위로 살짝 띄우기
+
+        float posX;
+        if ((currentStep - 1) % 2 == 0)   // 계단 만들 때와 동일한 짝수/홀수 판정
+        {
+            posX = -stepSideGap;
+        }
+        else
+        {
+            posX = stepSideGap;
+        }
+
+        // 플레이어의 위치를 새 좌표로 덮어씀
+        player.position = new Vector3(posX, posY, 0f);
+
+        Debug.Log("현재 " + currentStep + "칸 / 총 " + totalSteps + "칸");
+
+        // 꼭대기 도착 확인
+        if (currentStep >= totalSteps)
+        {
+            Debug.Log("달에 도착했습니다!");
+        }
     }
 
     // ===== 계단 20칸을 만드는 함수 =====

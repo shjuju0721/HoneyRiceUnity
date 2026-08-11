@@ -346,6 +346,7 @@ MonoBehaviour:
   totalSteps: 20
   stepHeightGap: 0.8
   stepSideGap: 0.6
+  player: {fileID: 1444843970}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
