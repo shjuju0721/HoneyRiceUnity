@@ -1,0 +1,27 @@
+# ===== 유니티 자동 생성 캐시 (node_modules 같은 존재, 커밋 금지) =====
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# ===== Visual Studio 자동 생성 파일 =====
+.vs/
+*.csproj
+*.sln
+*.userprefs
+
+# ===== 크래시 리포트 =====
+sysinfo.txt
+*.stackdump
+
+# ===== 빌드 결과물 =====
+*.apk
+*.aab
+*.unitypackage
+
+# ===== OS 잡파일 =====
+.DS_Store
+Thumbs.db
