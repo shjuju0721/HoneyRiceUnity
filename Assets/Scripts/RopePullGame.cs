@@ -7,6 +7,7 @@ using Mediapipe.Unity.Sample.FaceLandmarkDetection;
 public class RopePullGame : MonoBehaviour
 {
     [Header("연결")]
+    public RopeVisual rope;   // 밧줄 시각화. Inspector에서 연결
     public MoonClimbFaceRunner faceRunner;   // 얼굴 인식 러너
     public TMP_Text statusText;              // 상태 표시 텍스트
 
@@ -59,6 +60,14 @@ public class RopePullGame : MonoBehaviour
             {
                 CompleteOneSet();
             }
+        }
+        // --- 밧줄 팽팽함 갱신 ---
+        if (rope != null)
+        {
+            // 현재 입 다문 정도를 0~1로 환산
+            // holdThreshold에 도달하면 1(완전 팽팽)이 되도록 나눔
+            float tension = pressValue / holdThreshold;
+            rope.SetTension(tension);
         }
 
         UpdateStatusText(pressValue);
