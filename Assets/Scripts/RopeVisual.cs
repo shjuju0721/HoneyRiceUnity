@@ -1,54 +1,81 @@
 using UnityEngine;
 
 // 밧줄의 모양을 제어하는 스크립트
-// 팽팽함 정도(0~1)를 받아서 처짐과 굵기를 바꿈
+// 여러 개의 점을 곡선으로 배치해서 자연스러운 처짐을 만듦
 public class RopeVisual : MonoBehaviour
 {
     [Header("밧줄 양 끝 위치")]
-    public Vector3 leftPoint = new Vector3(-3f, 0f, 0f);   // 상대편 쪽 끝
-    public Vector3 rightPoint = new Vector3(3f, 0f, 0f);   // 플레이어 쪽 끝
+    public Vector3 leftPoint = new Vector3(-2.5f, 0f, 0f);
+    public Vector3 rightPoint = new Vector3(2.5f, 0f, 0f);
 
     [Header("모양 설정")]
+    public int pointCount = 20;          // 밧줄을 이루는 점의 개수. 많을수록 부드러움
     public float maxSag = 1.5f;          // 완전히 느슨할 때 아래로 처지는 정도
-    public float looseWidth = 0.12f;     // 느슨할 때 굵기
-    public float tightWidth = 0.22f;     // 팽팽할 때 굵기
+    public float pullDistance = 1.2f;    // 팽팽할 때 끝점이 당겨지는 거리
+    public float looseWidth = 0.12f;
+    public float tightWidth = 0.22f;
+
+    [Header("부드러움")]
+    public float smoothSpeed = 8f;       // 클수록 빠릿, 작을수록 부드러움
 
     [Header("색")]
-    public Color looseColor = new Color(0.55f, 0.4f, 0.25f);  // 느슨할 때 (연한 갈색)
-    public Color tightColor = new Color(0.9f, 0.75f, 0.3f);   // 팽팽할 때 (밝은 금색)
+    public Color looseColor = new Color(0.55f, 0.4f, 0.25f);
+    public Color tightColor = new Color(0.9f, 0.75f, 0.3f);
 
-    private LineRenderer line;   // 이 오브젝트에 붙은 LineRenderer
+    private LineRenderer line;
+    private float currentTension = 0f;   // 화면에 실제로 그려지는 팽팽함 (부드럽게 따라감)
+    private float targetTension = 0f;    // 목표 팽팽함 (외부에서 지정한 값)
 
-    // Awake = Start보다 먼저 실행됨. 컴포넌트 찾아두는 용도로 자주 씀
     void Awake()
     {
-        // GetComponent = 이 오브젝트에 붙은 컴포넌트를 코드로 가져오기
         line = GetComponent<LineRenderer>();
-        line.positionCount = 3;   // 점 3개 (시작-중간-끝)
+        line.positionCount = pointCount;   // 점 개수를 코드에서 지정
     }
 
-    // ===== 외부에서 호출하는 함수 =====
-    // tension: 0 = 완전 느슨, 1 = 완전 팽팽
+    // ===== 외부에서 호출: 목표값만 저장 =====
     public void SetTension(float tension)
     {
-        // Clamp01 = 값을 0~1 범위 안으로 강제로 가둠 (안전장치)
-        tension = Mathf.Clamp01(tension);
+        targetTension = Mathf.Clamp01(tension);
+    }
 
-        // --- 중간점의 처짐 계산 ---
-        // 팽팽할수록(tension이 1에 가까울수록) 덜 처짐
+    // ===== 매 프레임 실제 모양을 그림 =====
+    void Update()
+    {
+        // 현재값이 목표값을 부드럽게 따라감 (카메라 따라가기와 같은 원리)
+        currentTension = Mathf.Lerp(currentTension, targetTension, smoothSpeed * Time.deltaTime);
+
+        DrawRope(currentTension);
+    }
+
+    void DrawRope(float tension)
+    {
+        // --- 오른쪽 끝점 당기기 ---
+        Vector3 pulledRight = rightPoint;
+        pulledRight.x = rightPoint.x + (pullDistance * tension);
+
+        // --- 처짐 정도 ---
         float sag = maxSag * (1f - tension);
 
-        // 양 끝의 중간 지점을 구하고, 거기서 아래로 sag만큼 내림
-        Vector3 midPoint = (leftPoint + rightPoint) / 2f;
-        midPoint.y = midPoint.y - sag;
+        // --- 점을 하나씩 계산해서 배치 ---
+        for (int i = 0; i < pointCount; i++)
+        {
+            // t = 0(왼쪽 끝) ~ 1(오른쪽 끝) 사이의 진행도
+            // (pointCount - 1)로 나누는 이유: 점이 20개면 구간은 19개
+            float t = (float)i / (pointCount - 1);
 
-        // --- 점 3개의 위치를 LineRenderer에 전달 ---
-        line.SetPosition(0, leftPoint);
-        line.SetPosition(1, midPoint);
-        line.SetPosition(2, rightPoint);
+            // 양 끝 사이를 t 비율로 나눈 지점 (직선상의 위치)
+            Vector3 point = Vector3.Lerp(leftPoint, pulledRight, t);
+
+            // --- 처짐 곡선 계산 ---
+            // 양 끝(t=0, t=1)에서는 0, 가운데(t=0.5)에서 최대가 되는 곡선
+            // 4 * t * (1-t) 는 t=0.5일 때 정확히 1이 되는 포물선 공식
+            float sagCurve = 4f * t * (1f - t);
+            point.y = point.y - (sag * sagCurve);
+
+            line.SetPosition(i, point);
+        }
 
         // --- 굵기 ---
-        // Lerp(A, B, t) = A와 B 사이의 t 지점. 카메라 따라가기에서 쓴 것과 같음
         float width = Mathf.Lerp(looseWidth, tightWidth, tension);
         line.startWidth = width;
         line.endWidth = width;

@@ -33,9 +33,8 @@ public class RopePullGame : MonoBehaviour
             return;
         }
 
-        // --- 현재 mouthPress 평균값 구하기 ---
-        float pressValue = FaceBlendshapeReader.GetAverageScore(
-            faceRunner.latestResult, "mouthPressLeft", "mouthPressRight");
+        // 러너가 미리 뽑아둔 값을 그냥 평균냄 (리스트를 안 건드리므로 안전)
+        float pressValue = (faceRunner.latestMouthPressLeft + faceRunner.latestMouthPressRight) / 2f;
 
         // --- 히스테리시스: 다물었는지 판정 ---
         if (!isHolding && pressValue > holdThreshold)

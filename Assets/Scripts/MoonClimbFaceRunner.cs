@@ -21,8 +21,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public readonly FaceLandmarkDetectionConfig config = new FaceLandmarkDetectionConfig();
     // 가장 최근에 측정된 jawOpen 값. 다른 스크립트가 읽어감
     // public이라 Inspector에도 보이지만, 콜백이 다른 스레드에서 오므로 여기선 저장만 함
-    public FaceLandmarkerResult latestResult;
     public float latestJawOpen = 0f;
+    public float latestMouthPressLeft = 0f;
+    public float latestMouthPressRight = 0f;
 
     public override void Stop()
     {
@@ -162,12 +163,11 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     {
       _faceLandmarkerResultAnnotationController.DrawLater(result);
 
-      // 아까 만든 헬퍼로 jawOpen(입 벌린 정도, 0~1) 꺼내기
-      latestResult = result;
-      float jawOpen = FaceBlendshapeReader.GetScore(result, "jawOpen");
-
-      // 값을 변수에 저장해둠 (다른 스크립트가 읽어갈 수 있도록)
-      latestJawOpen = jawOpen;
+      // 콜백 스레드 안에서 필요한 숫자만 뽑아 저장
+      // float 복사는 원자적이라 다른 스레드와 충돌하지 않음
+      latestJawOpen = FaceBlendshapeReader.GetScore(result, "jawOpen");
+      latestMouthPressLeft = FaceBlendshapeReader.GetScore(result, "mouthPressLeft");
+      latestMouthPressRight = FaceBlendshapeReader.GetScore(result, "mouthPressRight");
     }
   }
 }
