@@ -1,5 +1,7 @@
 using UnityEngine;  // 유니티 기능(GameObject, Vector3 등)을 쓰려면 필요. Python의 import와 같음
 
+using TMPro;  // TextMeshPro 기능을 쓰려면 필요. Python의 import와 같음
+
 // 클래스 이름은 반드시 파일 이름(MoonClimbGame.cs)과 똑같아야 함
 // MonoBehaviour를 상속하면 유니티가 이 스크립트를 관리해줌 (Start, Update를 자동 호출)
 public class MoonClimbGame : MonoBehaviour
@@ -13,11 +15,13 @@ public class MoonClimbGame : MonoBehaviour
     public float stepSideGap = 0.6f;    // 계단 사이 가로 간격 (지그재그 폭)
     public Transform player;        // 플레이어 오브젝트. Inspector에서 드래그로 연결할 것
     private int currentStep = 0;    // 지금 몇 번째 칸에 있는지. private = 외부에서 못 건드림
+    public TMP_Text progressText;   // 진행도를 표시할 텍스트. Inspector에서 연결
 
     // ===== Play 누르면 딱 1번 실행되는 함수 =====
     void Start()
     {
         CreateSteps();  // 아래에 직접 만든 함수를 호출. 계단 만들기 시작
+        UpdateProgressText();  // 게임 시작할 때 "0 / 20"으로 초기화
     }
 
     // ===== 매 프레임마다 자동 실행 (초당 60번쯤) =====
@@ -62,6 +66,7 @@ public class MoonClimbGame : MonoBehaviour
         player.position = new Vector3(posX, posY, 0f);
 
         Debug.Log("현재 " + currentStep + "칸 / 총 " + totalSteps + "칸");
+        UpdateProgressText();  // 한 칸 오를 때마다 화면 숫자 갱신
 
         // 꼭대기 도착 확인
         if (currentStep >= totalSteps)
@@ -111,5 +116,25 @@ public class MoonClimbGame : MonoBehaviour
 
         // Debug.Log = Python의 print(). 유니티 Console 창에 출력됨
         Debug.Log("계단 " + totalSteps + "칸 생성 완료");
+    }
+
+    // ===== 화면의 진행도 텍스트를 갱신하는 함수 =====
+    void UpdateProgressText()
+    {
+        // 연결 안 됐으면 아무것도 안 함 (에러 방지)
+        if (progressText == null)
+        {
+            return;
+        }
+
+        // .text 에 값을 넣으면 화면 글자가 바뀜
+        // 숫자와 글자를 + 로 이어붙이면 C#이 알아서 글자로 합쳐줌
+        progressText.text = currentStep + " / " + totalSteps;
+
+        // 도착했으면 문구 변경
+        if (currentStep >= totalSteps)
+        {
+            progressText.text = "달 도착!";
+        }
     }
 }
