@@ -85,4 +85,11 @@ public class RopeVisual : MonoBehaviour
         line.startColor = color;
         line.endColor = color;
     }
+
+    // ===== 밧줄 오른쪽 끝 위치를 바꾸는 함수 =====
+    // 선수가 늘어날 때마다 호출해서 밧줄을 늘림
+    public void SetRightPoint(Vector3 newRight)
+    {
+        rightPoint = newRight;
+    }
 }
