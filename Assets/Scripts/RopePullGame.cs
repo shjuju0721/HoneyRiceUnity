@@ -10,6 +10,7 @@ public class RopePullGame : MonoBehaviour
     public RopeVisual rope;   // 밧줄 시각화. Inspector에서 연결
     public MoonClimbFaceRunner faceRunner;   // 얼굴 인식 러너
     public TMP_Text statusText;              // 상태 표시 텍스트
+    public GameObject completePanel;
 
     [Header("씨름 선수들")]
     public GameObject[] wrestlers;        // 선수 3명. Inspector에서 순서대로 연결
@@ -104,6 +105,11 @@ public class RopePullGame : MonoBehaviour
         if (completedSets >= totalSets)
         {
             isFinished = true;
+
+            if (completePanel != null)
+            {
+                completePanel.SetActive(true);
+            }
         }
     }
 

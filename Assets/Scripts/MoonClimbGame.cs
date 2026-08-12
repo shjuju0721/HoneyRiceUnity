@@ -21,6 +21,7 @@ public class MoonClimbGame : MonoBehaviour
     public float openThreshold = 0.35f;           // 이 값을 넘으면 "입 벌림"으로 판정
     public float closeThreshold = 0.15f;          // 이 값 아래로 내려가면 "입 다뭄"으로 판정
     public bool useFaceInput = true;              // 체크 해제하면 스페이스바 모드로 전환 (테스트용)
+    public GameObject completePanel;
 
     // 지금 입이 벌어진 상태인지 기억하는 변수
     // 이게 디바운스의 핵심: 벌린 상태에서 또 벌려도 카운트 안 됨
@@ -73,7 +74,12 @@ public class MoonClimbGame : MonoBehaviour
         // >= 를 쓰는 이유: currentStep이 20이면 이미 마지막 칸에 도착한 상태
         if (currentStep >= totalSteps)
         {
-            return;  // 함수를 여기서 끝내고 빠져나감 (Python의 return과 같음)
+            Debug.Log("달에 도착했습니다!");
+
+            if (completePanel != null)
+            {
+                completePanel.SetActive(true);
+            }
         }
 
         currentStep = currentStep + 1;  // 칸 수 1 증가
