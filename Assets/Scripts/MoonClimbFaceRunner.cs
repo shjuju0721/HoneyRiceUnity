@@ -24,6 +24,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public float latestJawOpen = 0f;
     public float latestMouthPressLeft = 0f;
     public float latestMouthPressRight = 0f;
+    public float latestMouthFunnel = 0f;
+    public float latestMouthPucker = 0f;   // 비교용. 개인차 확인
 
     public override void Stop()
     {
@@ -168,6 +170,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       latestJawOpen = FaceBlendshapeReader.GetScore(result, "jawOpen");
       latestMouthPressLeft = FaceBlendshapeReader.GetScore(result, "mouthPressLeft");
       latestMouthPressRight = FaceBlendshapeReader.GetScore(result, "mouthPressRight");
+      latestMouthFunnel = FaceBlendshapeReader.GetScore(result, "mouthFunnel");
+      latestMouthPucker = FaceBlendshapeReader.GetScore(result, "mouthPucker");
     }
   }
 }

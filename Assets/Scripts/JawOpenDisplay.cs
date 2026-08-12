@@ -18,7 +18,7 @@ public class JawOpenDisplay : MonoBehaviour
         // 러너가 미리 뽑아둔 값들을 읽기만 함
         display.text =
             "jawOpen: " + runner.latestJawOpen.ToString("F2") + "\n" +
-            "mouthPressLeft: " + runner.latestMouthPressLeft.ToString("F2") + "\n" +
-            "mouthPressRight: " + runner.latestMouthPressRight.ToString("F2");
+            "mouthFunnel: " + runner.latestMouthFunnel.ToString("F2") + "\n" +
+            "mouthPucker: " + runner.latestMouthPucker.ToString("F2");
     }
 }
