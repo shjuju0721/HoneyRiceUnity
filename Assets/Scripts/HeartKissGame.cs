@@ -11,6 +11,7 @@ public class HeartKissGame : MonoBehaviour
     public GameObject heartPrefab;      // 발사할 하트 프리팹
     public Transform launchPoint;       // 하트가 생겨나는 위치
     public Transform balloon;           // 목표인 풍선
+    public GameObject completePanel;   // 완료 시 띄울 패널. Inspector에서 연결
 
     [Header("판정 기준")]
     public float chargeThreshold = 0.25f;   // 이 값 이상이면 충전 시작
@@ -100,6 +101,12 @@ public class HeartKissGame : MonoBehaviour
         if (successCount >= targetCount)
         {
             isFinished = true;
+
+            // 완료 패널 켜기
+            if (completePanel != null)
+            {
+                completePanel.SetActive(true);
+            }
         }
     }
 
