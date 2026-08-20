@@ -11,4 +11,13 @@ public class SceneLoader : MonoBehaviour
         // Build Settings에 등록된 씬 이름으로 이동
         SceneManager.LoadScene(sceneName);
     }
+
+    // ===== 현재 씬을 다시 불러오기 =====
+    // 씬 이름을 몰라도 되므로, 모든 스테이지에서 같은 방식으로 사용 가능
+    public void ReloadCurrentScene()
+    {
+        // GetActiveScene() = 지금 열려 있는 씬
+        // .name = 그 씬의 이름
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 }
