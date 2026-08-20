@@ -26,6 +26,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public float latestMouthPressRight = 0f;
     public float latestMouthFunnel = 0f;
     public float latestMouthPucker = 0f;   // 비교용. 개인차 확인
+    public float latestCheekPuff = 0f;     // ★볼 부풀리기. 스테이지4 복어용
+    public float latestCheekWidth = 0f;    // ★볼 너비 비율. 스테이지4 복어용
 
     public override void Stop()
     {
@@ -177,6 +179,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       latestMouthPressRight = FaceBlendshapeReader.GetScore(result, "mouthPressRight");
       latestMouthFunnel = FaceBlendshapeReader.GetScore(result, "mouthFunnel");
       latestMouthPucker = FaceBlendshapeReader.GetScore(result, "mouthPucker");
+      latestCheekPuff = FaceBlendshapeReader.GetScore(result, "cheekPuff");   // ★추가
+      latestCheekWidth = FaceBlendshapeReader.GetCheekWidth(result);   // ★콜백 안에서 계산 끝내기
     }
   }
 }

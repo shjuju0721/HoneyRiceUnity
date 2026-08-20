@@ -50,4 +50,57 @@ public static class FaceBlendshapeReader
         float b = GetScore(result, nameB);
         return (a + b) / 2f;
     }
+
+        // ===== 볼 너비 비율 계산 =====
+    // 웹/데스크톱판에서 검증된 공식 그대로:
+    //   (61-135 + 291-364 + 137-366 거리의 평균) ÷ 얼굴 세로(10-152)
+    // 얼굴 세로로 나누는 이유 = 카메라에 가까이 가도 값이 안 변하게 (비율로 만듦)
+    public static float GetCheekWidth(FaceLandmarkerResult result)
+    {
+        // 랜드마크가 없으면 0 (얼굴이 안 잡혔을 때)
+        if (result.faceLandmarks == null || result.faceLandmarks.Count == 0)
+        {
+            return 0f;
+        }
+
+        var landmarks = result.faceLandmarks[0].landmarks;
+
+        if (landmarks == null || landmarks.Count < 400)
+        {
+            return 0f;
+        }
+
+        // --- 가로 거리 세 쌍의 평균 ---
+        float w1 = Distance(landmarks, 61, 135);
+        float w2 = Distance(landmarks, 291, 364);
+        float w3 = Distance(landmarks, 137, 366);
+        float widthAvg = (w1 + w2 + w3) / 3f;
+
+        // --- 얼굴 세로 (이마 10번 ~ 턱끝 152번) ---
+        float faceHeight = Distance(landmarks, 10, 152);
+
+        // 0으로 나누기 방지
+        if (faceHeight < 0.0001f)
+        {
+            return 0f;
+        }
+
+        return widthAvg / faceHeight;
+    }
+
+    // ===== 두 랜드마크 사이의 거리 =====
+    // 2D 화면상의 거리만 봄 (z는 정확도가 낮아서 뺌 — 웹 버전과 동일)
+    private static float Distance(
+        IReadOnlyList<Mediapipe.Tasks.Components.Containers.NormalizedLandmark> pts,
+        int indexA, int indexB)
+    {
+        var a = pts[indexA];
+        var b = pts[indexB];
+
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+
+        // Mathf.Sqrt = 제곱근. 피타고라스 정리로 직선 거리를 구함
+        return Mathf.Sqrt(dx * dx + dy * dy);
+    }
 }
