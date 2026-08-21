@@ -700,6 +700,8 @@ MonoBehaviour:
   latestMouthPressRight: 0
   latestMouthFunnel: 0
   latestMouthPucker: 0
+  latestCheekPuff: 0
+  latestCheekWidth: 0
 --- !u!1 &1084573863
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,8 +944,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC900\uBE44"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
-  m_sharedMaterial: {fileID: 6063513691343642751, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+  m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -967,8 +969,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 60
-  m_fontSizeBase: 60
+  m_fontSize: 100
+  m_fontSizeBase: 100
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1268,8 +1270,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+  m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

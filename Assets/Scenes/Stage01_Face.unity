@@ -290,8 +290,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 10 / 20
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
-  m_sharedMaterial: {fileID: 6063513691343642751, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+  m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -315,8 +315,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
-  m_fontSizeBase: 48
+  m_fontSize: 100
+  m_fontSizeBase: 100
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -384,7 +384,7 @@ RectTransform:
   m_AnchorMin: {x: 0.75, y: 1}
   m_AnchorMax: {x: 0.75, y: 1}
   m_AnchoredPosition: {x: 0, y: -60}
-  m_SizeDelta: {x: 200, y: 100}
+  m_SizeDelta: {x: 500, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &146494055
 GameObject:
@@ -767,7 +767,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 649.9512, y: 502.50006}
-  m_SizeDelta: {x: 200, y: 100}
+  m_SizeDelta: {x: 400, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &638183159
 MonoBehaviour:
@@ -907,6 +907,30 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: LoadScene
       objectReference: {fileID: 0}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_fontSize
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_fontStyle
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+    - target: {fileID: 7340919196968920135, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -932,6 +956,22 @@ PrefabInstance:
     - target: {fileID: 1510845029180530086, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: LoadScene
+      objectReference: {fileID: 0}
+    - target: {fileID: 1876498523620785994, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSize
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 1876498523620785994, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+    - target: {fileID: 1876498523620785994, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 1876498523620785994, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3018182755383867903, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_Name
@@ -1017,6 +1057,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5773206367944602471, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSize
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773206367944602471, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+    - target: {fileID: 5773206367944602471, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773206367944602471, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8380857321602681591, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -1024,6 +1080,22 @@ PrefabInstance:
     - target: {fileID: 8380857321602681591, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: ReloadCurrentScene
+      objectReference: {fileID: 0}
+    - target: {fileID: 8777607377695306362, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSize
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 8777607377695306362, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+    - target: {fileID: 8777607377695306362, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 8777607377695306362, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1235,6 +1307,8 @@ MonoBehaviour:
   latestMouthPressRight: 0
   latestMouthFunnel: 0
   latestMouthPucker: 0
+  latestCheekPuff: 0
+  latestCheekWidth: 0
 --- !u!224 &1229135957 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3259285889726014650, guid: 5713b959e3c77a58fb258133fc8e4aef, type: 3}
@@ -1579,8 +1653,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'jawOpen: 0.00'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+  m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

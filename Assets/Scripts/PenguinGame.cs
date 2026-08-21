@@ -225,11 +225,11 @@ public class PenguinGame : MonoBehaviour
         if (isCharging)
         {
             int percent = (int)((chargeTime / maxChargeTime) * 100f);
-            statusText.text = "부풀리는 중! " + percent + "%";
+            statusText.text = "부풀리는 중! \n" + percent + "%";
         }
         else
         {
-            statusText.text = "볼을 빵빵하게 부풀려 보세요";
+            statusText.text = "볼을 빵빵하게\n부풀려 보세요";
         }
     }
 }

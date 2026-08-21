@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u2190 \uBA54\uB274"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
-  m_sharedMaterial: {fileID: 6063513691343642751, guid: 9b2c3e8eb1a4f19469e91b9e8b41d743, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
+  m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -92,8 +92,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

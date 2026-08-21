@@ -239,7 +239,7 @@ public class HeartKissGame : MonoBehaviour
         }
         else
         {
-            statusText.text = successCount + " / " + targetCount + "\n입술을 오므리세요";
+            statusText.text = successCount + " / " + targetCount + "\n입술을\n오므리세요";
         }
     }
 }
