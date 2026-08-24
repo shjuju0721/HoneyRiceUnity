@@ -5,7 +5,7 @@ using TMPro;
 using Mediapipe.Unity.Sample;
 using Mediapipe.Unity.Sample.FaceLandmarkDetection;
 
-// 스테이지 5: 미소 사진관 (B단계 - 웹캠 캡처 추가)
+// 스테이지 5: 미소 사진관 (C-1단계 - 폴라로이드 걸기)
 public class SmileStudioGame : MonoBehaviour
 {
     [Header("연결")]
@@ -13,7 +13,13 @@ public class SmileStudioGame : MonoBehaviour
     public TMP_Text statusText;
     public Slider smileGauge;
     public GameObject completePanel;
-    public RawImage previewImage;       // ★확인용. 마지막에 찍은 사진을 보여줌
+
+    [Header("사진 걸기")]
+    public GameObject polaroidPrefab;   // 폴라로이드 틀 프리팹
+    public RectTransform photoLine;     // 사진이 걸릴 자리
+    public float photoSpacing = 140f;   // 사진 사이 간격(픽셀)
+    public float tiltRange = 5f;        // 기울기를 몇 도까지 랜덤하게 줄지
+    public float ropeSag = 26f;         // ★줄 가운데가 처진 깊이
 
     [Header("판정 기준 (실측값)")]
     public float detectThreshold = 0.46f;
@@ -23,7 +29,7 @@ public class SmileStudioGame : MonoBehaviour
     public float holdTime = 3.5f;
     public float waitTime = 2.5f;
     public int targetPhotos = 5;
-    public int photoSize = 320;         // ★사진 한 변의 픽셀 수
+    public int photoSize = 320;
 
     // ===== 내부 상태 =====
     private int photoCount = 0;
@@ -32,7 +38,6 @@ public class SmileStudioGame : MonoBehaviour
     private bool isArmed = true;
     private bool isFinished = false;
 
-    // ★찍은 사진들을 담아두는 목록
     private List<Texture2D> photos = new List<Texture2D>();
 
     void Update()
@@ -99,18 +104,12 @@ public class SmileStudioGame : MonoBehaviour
         waitTimer = waitTime;
         isArmed = false;
 
-        // ★웹캠 화면을 한 장 떠옴
         Texture2D shot = CaptureWebcam();
 
         if (shot != null)
         {
             photos.Add(shot);
-
-            // 확인용으로 화면에 띄움
-            if (previewImage != null)
-            {
-                previewImage.texture = shot;
-            }
+            HangPolaroid(shot, photoCount - 1);   // ★빨랫줄에 걸기
         }
 
         Debug.Log("찰칵! " + photoCount + " / " + targetPhotos);
@@ -121,10 +120,51 @@ public class SmileStudioGame : MonoBehaviour
         }
     }
 
-    // ★===== 웹캠 화면을 정사각형으로 잘라 복사 =====
+    // ★===== 폴라로이드를 빨랫줄에 걸기 =====
+    // index: 0부터 시작하는 몇 번째 사진인지
+    void HangPolaroid(Texture2D photo, int index)
+    {
+        if (polaroidPrefab == null || photoLine == null)
+        {
+            return;
+        }
+
+        // 프리팹을 복제해서 빨랫줄의 자식으로 넣음
+        GameObject card = Instantiate(polaroidPrefab, photoLine);
+
+        RectTransform rt = card.GetComponent<RectTransform>();
+
+        if (rt != null)
+        {
+            // 5장이 가운데를 기준으로 좌우 대칭이 되도록 위치 계산
+            // 예: 5장이면 -2, -1, 0, 1, 2 자리에 놓임
+            float centerOffset = (targetPhotos - 1) / 2f;
+            float x = (index - centerOffset) * photoSpacing;
+
+            // ★줄이 처진 만큼 사진도 내려옴
+            // 4t(1-t) 는 가운데(t=0.5)에서 1, 양 끝에서 0이 되는 식
+            float t = (float)index / (targetPhotos - 1);
+            float sag = 4f * t * (1f - t) * ropeSag;
+
+            rt.anchoredPosition = new Vector2(x, -sag);
+
+            // 손으로 건 느낌이 나게 조금씩 다르게 기울임
+            float tilt = Random.Range(-tiltRange, tiltRange);
+            rt.localRotation = Quaternion.Euler(0f, 0f, tilt);
+        }
+
+        // 프리팹 안의 Photo(RawImage)를 찾아서 사진을 넣음
+        RawImage slot = card.GetComponentInChildren<RawImage>();
+
+        if (slot != null)
+        {
+            slot.texture = photo;
+        }
+    }
+
+    // ===== 웹캠 화면을 정사각형으로 잘라 복사 =====
     Texture2D CaptureWebcam()
     {
-        // MediaPipe가 쓰고 있는 웹캠 텍스처를 가져옴
         var source = ImageSourceProvider.ImageSource;
 
         if (source == null)
@@ -141,26 +181,20 @@ public class SmileStudioGame : MonoBehaviour
             return null;
         }
 
-        // --- 짧은 변 기준으로 정사각형 영역을 계산 ---
-        // 가로가 더 길면 좌우를 잘라내고, 세로가 길면 위아래를 잘라냄
         float shortSide = Mathf.Min(src.width, src.height);
         float scaleX = shortSide / src.width;
         float scaleY = shortSide / src.height;
 
-        // 가운데를 쓰도록 시작 위치를 잡음
         float offsetX = (1f - scaleX) / 2f;
         float offsetY = (1f - scaleY) / 2f;
 
-        // ★거울 반전: 가로 배율을 음수로 주면 좌우가 뒤집힘
-        //   화면에서 보던 모습 그대로 나오게 하려는 것
+        // 거울 반전: 가로 배율을 음수로
         Vector2 scale = new Vector2(-scaleX, scaleY);
         Vector2 offset = new Vector2(offsetX + scaleX, offsetY);
 
-        // --- 임시 화면에 그려 넣기 ---
         RenderTexture rt = RenderTexture.GetTemporary(photoSize, photoSize, 0);
         Graphics.Blit(src, rt, scale, offset);
 
-        // --- 그려진 것을 Texture2D로 읽어옴 ---
         RenderTexture prev = RenderTexture.active;
         RenderTexture.active = rt;
 
@@ -192,7 +226,7 @@ public class SmileStudioGame : MonoBehaviour
         }
     }
 
-    // ★===== 씬을 떠날 때 사진 메모리 정리 =====
+    // ===== 씬을 떠날 때 사진 메모리 정리 =====
     void OnDestroy()
     {
         foreach (var photo in photos)
