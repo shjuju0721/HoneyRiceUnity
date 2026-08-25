@@ -7,17 +7,24 @@ public class JawOpenDisplay : MonoBehaviour
 {
     public MoonClimbFaceRunner runner;
     public TMP_Text display;
+    public TongueScanner tongueScanner;   // ★혀 인식 결과
 
     void Update()
     {
-        if (runner == null || display == null)
+        string tongueLine = "tongue: -";
+
+        if (tongueScanner != null)
         {
-            return;
+            tongueLine = "tongue: " + tongueScanner.ratio.ToString("F2") + "\n"
+                + "R" + tongueScanner.redCount
+                + " W" + tongueScanner.whiteCount
+                + " Y" + tongueScanner.yellowCount
+                + " /" + tongueScanner.mouthCount + "\n"
+                + "avgV: " + tongueScanner.avgV.ToString("F0");
         }
 
-        // 러너가 미리 뽑아둔 값들을 읽기만 함
         display.text =
-            "smile: " + runner.latestSmile.ToString("F2") + "\n" +
-            "cheek: " + runner.latestCheekWidth.ToString("F4");
+            "jawOpen: " + runner.latestJawOpen.ToString("F2") + "\n" +
+            tongueLine;
     }
 }

@@ -29,6 +29,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public float latestCheekPuff = 0f;     // ★볼 부풀리기. 스테이지4 복어용
     public float latestCheekWidth = 0f;    // ★볼 너비 비율. 스테이지4 복어용
     public float latestSmile = 0f;    // ★미소 강도(좌우 평균). 스테이지5용
+    // ★혀 인식용: 입술 안쪽 20개 점 (콜백에서 채우고, 다른 스크립트가 읽어감)
+    public Vector2[] latestInnerLip = new Vector2[20];
+    public bool latestHasLip = false;
 
     public override void Stop()
     {
@@ -183,6 +186,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       latestCheekPuff = FaceBlendshapeReader.GetScore(result, "cheekPuff");   // ★추가
       latestCheekWidth = FaceBlendshapeReader.GetCheekWidth(result);   // ★콜백 안에서 계산 끝내기
       latestSmile = FaceBlendshapeReader.GetAverageScore(result, "mouthSmileLeft", "mouthSmileRight");
+      latestHasLip = FaceBlendshapeReader.FillInnerLip(result, latestInnerLip);
+
     }
   }
 }

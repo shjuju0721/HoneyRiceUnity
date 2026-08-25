@@ -103,4 +103,44 @@ public static class FaceBlendshapeReader
         // Mathf.Sqrt = 제곱근. 피타고라스 정리로 직선 거리를 구함
         return Mathf.Sqrt(dx * dx + dy * dy);
     }
+
+        // ===== 입술 안쪽 둘레 20개 점 번호 =====
+    // 데스크톱 → 웹 → 유니티, 세 번째 이식. 순서대로 이으면 "입 안" 다각형이 됨
+    // ★순서를 바꾸면 다각형이 꼬입니다
+    public static readonly int[] INNER_LIP = {
+        78, 95, 88, 178, 87, 14, 317, 402, 318, 324,
+        308, 415, 310, 311, 312, 13, 82, 81, 80, 191
+    };
+
+    // ===== 입술 안쪽 20개 점의 좌표를 뽑아 담기 =====
+    // ★콜백 스레드 안에서 불러야 함. 좌표만 복사해서 넘김(목록 자체를 밖으로 넘기면 크래시)
+    // dest: 미리 만들어둔 20칸짜리 배열. 여기에 값을 채워 넣음
+    // 돌려주는 값: 성공했으면 true
+    public static bool FillInnerLip(FaceLandmarkerResult result, Vector2[] dest)
+    {
+        if (dest == null || dest.Length < INNER_LIP.Length)
+        {
+            return false;
+        }
+
+        if (result.faceLandmarks == null || result.faceLandmarks.Count == 0)
+        {
+            return false;
+        }
+
+        var landmarks = result.faceLandmarks[0].landmarks;
+
+        if (landmarks == null || landmarks.Count < 478)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < INNER_LIP.Length; i++)
+        {
+            var p = landmarks[INNER_LIP[i]];
+            dest[i] = new Vector2(p.x, p.y);   // 0~1 정규화 좌표
+        }
+
+        return true;
+    }
 }
