@@ -9,6 +9,7 @@ public class FrogTongueGame : MonoBehaviour
     public MoonClimbFaceRunner faceRunner;
     public TongueScanner tongueScanner;
     public Transform frogTongue;        // 개구리 혀 (Frog의 자식)
+    public Transform tongueTip;         // ★혀 끝 표식 (Tongue의 자식)
     public Transform fly;               // 파리
     public TMP_Text statusText;
     public GameObject completePanel;
@@ -16,27 +17,33 @@ public class FrogTongueGame : MonoBehaviour
     [Header("판정 기준 (웹에서 검증된 값)")]
     public float ratioOn = 0.35f;       // 이만큼 차면 "혀를 내밀었다"
     public float ratioOff = 0.20f;      // 이 아래면 "혀를 넣었다"
-    public float jawMin = 0.55f;        // ★입을 이만큼 벌려야 판정 (치아 오인식 방지)
+    public float jawMin = 0.55f;        // ★입을 이만큼 벌려야 판정
     public float jawOff = 0.40f;        // 입 벌림 해제 기준
 
     [Header("혀 연출")]
-    public float tongueMinScale = 0.1f;   // 넣었을 때 길이
-    public float tongueMaxScale = 2.5f;   // 최대로 뻗었을 때 길이
-    public float tongueSpeed = 12f;       // 뻗고 들어가는 속도
+    public float tongueMinScale = 0.1f;
+    public float tongueMaxScale = 2.5f;
+    public float tongueSpeed = 12f;
 
     [Header("게임 설정")]
-    public float catchDistance = 1.2f;    // 혀끝이 이만큼 가까우면 잡음
-    public int targetFlies = 5;           // 몇 마리 잡으면 완료
-    public float flySpeed = 0.8f;         // 파리가 떠다니는 속도
+    public float catchDistance = 1.2f;  // 혀끝이 이만큼 가까우면 잡음
+    public int targetFlies = 5;
+    public float flySpeed = 0.8f;
+
+    [Header("진단용 (다 되면 끄기)")]
+    public bool showDistance = true;    // ★혀끝-파리 거리를 화면에 표시
 
     // ===== 내부 상태 =====
-    private bool isTongueOut = false;     // 지금 혀를 내민 상태인가
-    private int caughtCount = 0;          // 잡은 파리 수
+    private bool isTongueOut = false;
+    private int caughtCount = 0;
     private bool isFinished = false;
 
-    private float currentScale;           // 지금 혀 길이
-    private Vector3 flyHome;              // 파리가 떠다니는 중심
+    private float currentScale;
+    private Vector3 flyBase;            // ★파리가 처음 있던 자리 (범위 기준)
+    private Vector3 flyHome;            // 지금 떠다니는 중심
     private float flyTimer = 0f;
+    private float lastDistance = 0f;    // 진단용
+    private bool canCatch = true;       // ★지금 잡을 수 있는 상태인가 (재장전)
 
     void Start()
     {
@@ -44,7 +51,8 @@ public class FrogTongueGame : MonoBehaviour
 
         if (fly != null)
         {
-            flyHome = fly.position;
+            flyBase = fly.position;
+            flyHome = flyBase;
         }
 
         UpdateTongueVisual();
@@ -59,7 +67,8 @@ public class FrogTongueGame : MonoBehaviour
 
         UpdateFly();          // 파리 떠다니기
         UpdateTongueState();  // 혀 내밀었는지 판정
-        UpdateTongueVisual(); // 혀 길이 부드럽게 바꾸기
+        UpdateTongueVisual(); // 혀 길이 바꾸기
+        TryCatchFly();        // ★매 프레임 검사 (전엔 내미는 순간만 봤음)
         UpdateStatusText();
     }
 
@@ -71,19 +80,17 @@ public class FrogTongueGame : MonoBehaviour
 
         if (!isTongueOut)
         {
-            // ★입을 충분히 벌리고 + 혀 비율이 넘어야 인정
             if (jaw >= jawMin && ratio > ratioOn)
             {
                 isTongueOut = true;
-                TryCatchFly();   // 내미는 순간 파리 잡기 시도
             }
         }
         else
         {
-            // 혀를 넣었거나 입을 정말 다물었으면 해제
             if (jaw < jawOff || ratio < ratioOff)
             {
                 isTongueOut = false;
+                canCatch = true;    // ★혀를 넣었으니 다시 잡을 수 있음
             }
         }
     }
@@ -98,46 +105,39 @@ public class FrogTongueGame : MonoBehaviour
 
         float target = isTongueOut ? tongueMaxScale : tongueMinScale;
 
-        // Lerp = 지금 값에서 목표까지 조금씩 다가감 (뚝 끊기지 않게)
         currentScale = Mathf.Lerp(currentScale, target, tongueSpeed * Time.deltaTime);
 
         Vector3 s = frogTongue.localScale;
         frogTongue.localScale = new Vector3(currentScale, s.y, s.z);
     }
 
-    // ===== 혀끝이 파리에 닿았는지 =====
+        // ===== 혀끝이 파리에 닿았는지 =====
     void TryCatchFly()
     {
-        if (fly == null || frogTongue == null)
+        if (fly == null || tongueTip == null)
         {
             return;
         }
 
-        // 혀끝의 세계 좌표 구하기
-        // 피벗이 왼쪽이라, 오른쪽으로 (최대길이 × 스프라이트폭)만큼 간 지점이 끝
-        Vector3 tipPos = GetTongueTip();
+        lastDistance = Vector3.Distance(tongueTip.position, fly.position);
 
-        float distance = Vector3.Distance(tipPos, fly.position);
-
-        if (distance < catchDistance)
+        // 혀를 내민 상태가 아니면 못 잡음
+        if (!isTongueOut)
         {
+            return;
+        }
+
+        // ★한 번 잡았으면 혀를 넣을 때까지 잠금
+        if (!canCatch)
+        {
+            return;
+        }
+
+        if (lastDistance < catchDistance)
+        {
+            canCatch = false;   // ★잠그기
             CatchFly();
         }
-    }
-
-    // ===== 혀끝 위치 계산 =====
-    Vector3 GetTongueTip()
-    {
-        // 혀가 뻗은 방향(오른쪽) × 최대 길이만큼 이동한 지점
-        float tongueWidth = 1f;
-
-        SpriteRenderer sr = frogTongue.GetComponent<SpriteRenderer>();
-        if (sr != null && sr.sprite != null)
-        {
-            tongueWidth = sr.sprite.bounds.size.x;
-        }
-
-        return frogTongue.position + frogTongue.right * (tongueMaxScale * tongueWidth);
     }
 
     // ===== 파리를 잡았다! =====
@@ -152,7 +152,6 @@ public class FrogTongueGame : MonoBehaviour
             return;
         }
 
-        // 다음 파리를 새 위치에 배치
         MoveFlyToNewSpot();
     }
 
@@ -164,10 +163,12 @@ public class FrogTongueGame : MonoBehaviour
             return;
         }
 
+        // ★처음 자리를 기준으로 흩뿌린다.
+        //   전에는 계속 더해서 파리가 화면 밖으로 도망갔다.
         float offsetX = Random.Range(-1.5f, 1.5f);
         float offsetY = Random.Range(-1f, 1f);
 
-        flyHome = flyHome + new Vector3(offsetX, offsetY, 0f);
+        flyHome = flyBase + new Vector3(offsetX, offsetY, 0f);
         flyTimer = 0f;
     }
 
@@ -181,7 +182,6 @@ public class FrogTongueGame : MonoBehaviour
 
         flyTimer += Time.deltaTime * flySpeed;
 
-        // sin/cos로 8자 모양으로 떠다니게
         float x = Mathf.Sin(flyTimer) * 0.5f;
         float y = Mathf.Sin(flyTimer * 1.7f) * 0.3f;
 
@@ -233,6 +233,13 @@ public class FrogTongueGame : MonoBehaviour
         else
         {
             line = line + "혀를 쏙 내밀어 보세요";
+        }
+
+        // ★진단용 한 줄
+        if (showDistance)
+        {
+            line = line + "\n거리 " + lastDistance.ToString("F2")
+                        + " (잡히는 거리 " + catchDistance.ToString("F2") + ")";
         }
 
         statusText.text = line;

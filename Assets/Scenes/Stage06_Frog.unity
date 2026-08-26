@@ -389,7 +389,8 @@ Transform:
   m_LocalPosition: {x: -1, y: 0.4, z: -1.5}
   m_LocalScale: {x: 0.10000002, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1530110322}
   m_Father: {fileID: 162967052}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 20}
 --- !u!224 &227437298 stripped
@@ -1213,6 +1214,7 @@ MonoBehaviour:
   faceRunner: {fileID: 1064799462}
   tongueScanner: {fileID: 1095621366}
   frogTongue: {fileID: 227305493}
+  tongueTip: {fileID: 1530110322}
   fly: {fileID: 1103229766}
   statusText: {fileID: 1479875011}
   completePanel: {fileID: 3957632735764638019}
@@ -1221,11 +1223,12 @@ MonoBehaviour:
   jawMin: 0.55
   jawOff: 0.4
   tongueMinScale: 0.1
-  tongueMaxScale: 2.5
+  tongueMaxScale: 2
   tongueSpeed: 12
-  catchDistance: 1.2
+  catchDistance: 2
   targetFlies: 5
   flySpeed: 0.8
+  showDistance: 0
 --- !u!1 &1103229764
 GameObject:
   m_ObjectHideFlags: 0
@@ -1476,7 +1479,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 659, y: 350}
-  m_SizeDelta: {x: 700, y: 250}
+  m_SizeDelta: {x: 800, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479875011
 MonoBehaviour:
@@ -1664,6 +1667,37 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1530110321
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1530110322}
+  m_Layer: 0
+  m_Name: TongueTip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1530110322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530110321}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 227305493}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1806680259
 GameObject:
   m_ObjectHideFlags: 0
