@@ -14,6 +14,11 @@ public class FrogTongueGame : MonoBehaviour
     public TMP_Text statusText;
     public GameObject completePanel;
 
+    [Header("파리 그림")]
+    public SpriteRenderer flyRenderer;  // ★파리의 Sprite Renderer
+    public Sprite flyAliveSprite;       // ★살아있는 파리
+    public Sprite flyDeadSprite;        // ★죽은 파리
+
     [Header("판정 기준 (웹에서 검증된 값)")]
     public float ratioOn = 0.35f;       // 이만큼 차면 "혀를 내밀었다"
     public float ratioOff = 0.20f;      // 이 아래면 "혀를 넣었다"
@@ -29,6 +34,7 @@ public class FrogTongueGame : MonoBehaviour
     public float catchDistance = 1.2f;  // 혀끝이 이만큼 가까우면 잡음
     public int targetFlies = 5;
     public float flySpeed = 0.8f;
+    public float deadTime = 1.5f;       // ★죽은 모습을 보여주는 시간(초)
 
     [Header("진단용 (다 되면 끄기)")]
     public bool showDistance = true;    // ★혀끝-파리 거리를 화면에 표시
@@ -44,6 +50,7 @@ public class FrogTongueGame : MonoBehaviour
     private float flyTimer = 0f;
     private float lastDistance = 0f;    // 진단용
     private bool canCatch = true;       // ★지금 잡을 수 있는 상태인가 (재장전)
+    private float deadTimer = 0f;       // ★죽은 연출 남은 시간
 
     void Start()
     {
@@ -65,10 +72,26 @@ public class FrogTongueGame : MonoBehaviour
             return;
         }
 
-        UpdateFly();          // 파리 떠다니기
-        UpdateTongueState();  // 혀 내밀었는지 판정
-        UpdateTongueVisual(); // 혀 길이 바꾸기
-        TryCatchFly();        // ★매 프레임 검사 (전엔 내미는 순간만 봤음)
+        // ★죽은 연출 중에는 파리가 멈춰 있고 잡을 수도 없음
+        if (deadTimer > 0f)
+        {
+            deadTimer -= Time.deltaTime;
+
+            if (deadTimer <= 0f)
+            {
+                RespawnFly();   // 시간이 다 되면 새 파리 등장
+            }
+
+            UpdateTongueState();
+            UpdateTongueVisual();
+            UpdateStatusText();
+            return;
+        }
+
+        UpdateFly();
+        UpdateTongueState();
+        UpdateTongueVisual();
+        TryCatchFly();
         UpdateStatusText();
     }
 
@@ -146,10 +169,28 @@ public class FrogTongueGame : MonoBehaviour
         caughtCount = caughtCount + 1;
         Debug.Log(caughtCount + "번째 파리 잡음!");
 
+        // ★죽은 모습으로 바꾸기
+        if (flyRenderer != null && flyDeadSprite != null)
+        {
+            flyRenderer.sprite = flyDeadSprite;
+        }
+
         if (caughtCount >= targetFlies)
         {
             Finish();
             return;
+        }
+
+        deadTimer = deadTime;   // ★여기서부터 0.5초 세기 시작
+    }
+
+    // ★===== 죽은 연출이 끝나면 새 파리 =====
+    void RespawnFly()
+    {
+        // 살아있는 그림으로 되돌리기
+        if (flyRenderer != null && flyAliveSprite != null)
+        {
+            flyRenderer.sprite = flyAliveSprite;
         }
 
         MoveFlyToNewSpot();
