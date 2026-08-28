@@ -165,6 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   runner: {fileID: 1064799462}
   display: {fileID: 2030581798}
+  tongueScanner: {fileID: 0}
 --- !u!4 &233227165
 Transform:
   m_ObjectHideFlags: 0
@@ -757,6 +758,28 @@ MonoBehaviour:
   latestCheekPuff: 0
   latestCheekWidth: 0
   latestSmile: 0
+  latestInnerLip:
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  latestHasLip: 0
 --- !u!1 &1129898809
 GameObject:
   m_ObjectHideFlags: 0
@@ -1708,6 +1731,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BackButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6530554313640879803, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7051069950634262532, guid: a7c9c7be6c9c9a84d9deea51ceeae0f2, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -2134,6 +2161,10 @@ PrefabInstance:
     - target: {fileID: 8571076842338426133, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8571076842341243440, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8571076842341243442, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
       propertyPath: m_Color.a
