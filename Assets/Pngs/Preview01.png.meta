@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b3808ff87ceee9a4f8d14708b1225f57
+guid: fee8ae03287479d419eb2373b2c00cfe
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5309335562062879065
-    second: Priview01_0
+      213: -8458591911652529014
+    second: Preview01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Priview01_0
+      name: Preview01_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 766
-        height: 638
+        width: 566
+        height: 424
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7a6a4e5bf637156b0800000000000000
-      internalID: -5309335562062879065
+      spriteID: a8c65fdc87b0d9a80800000000000000
+      internalID: -8458591911652529014
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Priview01_0: -5309335562062879065
+      Preview01_0: -8458591911652529014
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

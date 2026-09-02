@@ -1304,7 +1304,7 @@ MonoBehaviour:
     description: "\uB2EC\uBE5B\uC744 \uB530\uB77C \uACC4\uB2E8\uC774 \uB193\uC600\uC5B4\uC694.\n\uC785\uC744
       \uD06C\uAC8C \uBC8C\uB9B4 \uB54C\uB9C8\uB2E4 \uD55C \uCE78\uC529!\n\uB2EC\uAE4C\uC9C0
       \uD568\uAED8 \uC62C\uB77C\uAC00 \uBCFC\uAE4C\uC694?"
-    previewImage: {fileID: 21300000, guid: b3808ff87ceee9a4f8d14708b1225f57, type: 3}
+    previewImage: {fileID: -8458591911652529014, guid: fee8ae03287479d419eb2373b2c00cfe, type: 3}
     sceneName: Stage01_Face
   - title: "2. \uC601\uCC28\uC601\uCC28 \uC904\uB2E4\uB9AC"
     description: "\uC904\uB2E4\uB9AC\uAE30\uAC00 \uC2DC\uC791\uB410\uC5B4\uC694!\n\uC785\uC220\uC744
@@ -1917,8 +1917,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 44
+  m_fontSizeBase: 44
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2487,8 +2487,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 44
+  m_fontSizeBase: 44
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
