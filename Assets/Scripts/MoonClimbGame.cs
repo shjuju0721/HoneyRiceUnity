@@ -13,6 +13,16 @@ public class MoonClimbGame : MonoBehaviour
     public Transform player;            // 플레이어 오브젝트
     public TMP_Text progressText;       // 진행도를 표시할 텍스트
     public GameObject completePanel;    // 완료 시 띄울 패널
+    public float playerOffsetY = 0.5f;   // 발판 위로 띄우는 높이
+
+    [Header("토끼 그림")]
+    public SpriteRenderer playerRenderer;   // 플레이어의 Sprite Renderer
+    public Sprite rabbitIdle;               // 앉아 있는 토끼
+    public Sprite rabbitJump;               // 뛰어오르는 토끼
+
+    [Header("점프 연출")]
+    public float jumpTime = 0.35f;          // 한 칸 뛰는 데 걸리는 시간(초)
+    public float jumpHeight = 0.6f;         // 포물선이 얼마나 높이 솟는지
 
     [Header("얼굴 인식 설정")]
     public MoonClimbFaceRunner faceRunner;   // jawOpen 값을 읽어올 러너
@@ -23,12 +33,37 @@ public class MoonClimbGame : MonoBehaviour
     // ===== 내부 상태 =====
     private int currentStep = 0;        // 지금 몇 번째 칸에 있는지
     private bool isMouthOpen = false;   // 지금 입이 벌어진 상태인지 (디바운스용)
+    private bool isJumping = false;         // 지금 뛰는 중인지 (중복 입력 막기)
 
-    // ===== Play 누르면 딱 1번 실행 =====
-    void Start()
+       void Start()
     {
         CreateSteps();
-        UpdateProgressText();  // "0 / 20"으로 초기화
+
+        // ★토끼를 첫 계단 아래(출발 지점)에 세운다
+        MovePlayerToStart();
+
+        UpdateProgressText();
+    }
+
+    // ★===== 시작 위치로 토끼 보내기 =====
+    void MovePlayerToStart()
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+       // ★0번 계단(맨 아래) 위에 선다
+        float posY = playerOffsetY;
+        float posX = -stepSideGap;
+
+        player.position = new Vector3(posX, posY, 0f);
+
+        // 오른쪽 위로 뛸 거니까 오른쪽을 보게
+        if (playerRenderer != null)
+        {
+            playerRenderer.flipX = false;
+        }
     }
 
     // ===== 매 프레임마다 자동 실행 =====
@@ -63,24 +98,28 @@ public class MoonClimbGame : MonoBehaviour
         }
     }
 
-    // ===== 한 칸 올라가는 함수 =====
+        // ===== 한 칸 올라가는 함수 =====
     void ClimbOneStep()
     {
-        // --- 방어: 이미 꼭대기면 더 안 올라감 ---
-        // 아직 칸을 안 올린 상태에서 검사하므로, 도착 후 추가 입력을 막는 역할
+        // 이미 꼭대기면 더 안 올라감
         if (currentStep >= totalSteps)
         {
             return;
         }
 
-        currentStep = currentStep + 1;  // 칸 수 1 증가
+        // ★뛰는 중에 또 입력이 들어오면 무시
+        if (isJumping)
+        {
+            return;
+        }
 
-        // --- 플레이어를 다음 칸 위치로 이동 ---
-        // 계단을 만들 때 쓴 계산식과 똑같이 맞춰야 발판 위에 정확히 올라감
-        float posY = (currentStep - 1) * stepHeightGap + 0.5f;  // +0.5f = 발판 위로 살짝 띄우기
+        currentStep = currentStep + 1;
+
+         // ★0번에서 출발하므로, 1칸 오르면 1번 계단으로 간다
+        float posY = currentStep * stepHeightGap + playerOffsetY;
 
         float posX;
-        if ((currentStep - 1) % 2 == 0)   // 계단 만들 때와 동일한 짝수/홀수 판정
+        if (currentStep % 2 == 0)
         {
             posX = -stepSideGap;
         }
@@ -89,12 +128,15 @@ public class MoonClimbGame : MonoBehaviour
             posX = stepSideGap;
         }
 
-        player.position = new Vector3(posX, posY, 0f);
+        Vector3 goal = new Vector3(posX, posY, 0f);
+
+        // ★순간이동 대신 포물선으로 뛰어오르기
+        StartCoroutine(JumpTo(goal));
 
         Debug.Log("현재 " + currentStep + "칸 / 총 " + totalSteps + "칸");
         UpdateProgressText();
 
-        // --- 완료 확인: 칸을 올린 뒤에 검사해야 "방금 도착"을 잡을 수 있음 ---
+        // 완료 확인
         if (currentStep >= totalSteps)
         {
             Debug.Log("달에 도착했습니다!");
@@ -106,11 +148,78 @@ public class MoonClimbGame : MonoBehaviour
         }
     }
 
+    // ★===== 포물선을 그리며 다음 칸으로 뛰기 =====
+    // IEnumerator = 여러 프레임에 걸쳐 조금씩 실행되는 함수 (코루틴)
+    System.Collections.IEnumerator JumpTo(Vector3 goal)
+    {
+        isJumping = true;
+
+        // ★가는 방향을 바라보게 좌우 반전
+        // goal.x가 지금 위치보다 오른쪽이면 오른쪽을 본다
+        if (playerRenderer != null)
+        {
+            if (goal.x > player.position.x)
+            {
+                playerRenderer.flipX = false;   // 원래 방향 (오른쪽)
+            }
+            else
+            {
+                playerRenderer.flipX = true;    // 뒤집기 (왼쪽)
+            }
+        }
+
+        // 뛰는 그림으로 바꾸기
+        if (playerRenderer != null && rabbitJump != null)
+        {
+            playerRenderer.sprite = rabbitJump;
+        }
+
+        Vector3 start = player.position;
+        float timer = 0f;
+
+        // jumpTime 동안 조금씩 이동
+        while (timer < jumpTime)
+        {
+            timer += Time.deltaTime;
+
+            // t는 0에서 1까지 (0=출발, 1=도착)
+            float t = timer / jumpTime;
+
+            if (t > 1f)
+            {
+                t = 1f;
+            }
+
+            // 출발점에서 도착점까지 직선으로 이동
+            Vector3 now = Vector3.Lerp(start, goal, t);
+
+            // 거기에 포물선 높이를 더한다.
+            // Sin(t * 180도)는 t=0.5일 때 가장 크고, 양 끝에서 0이 된다.
+            float arc = Mathf.Sin(t * Mathf.PI) * jumpHeight;
+            now.y = now.y + arc;
+
+            player.position = now;
+
+            yield return null;   // 다음 프레임까지 기다린다
+        }
+
+        // 정확한 위치로 마무리
+        player.position = goal;
+
+        // 앉은 그림으로 되돌리기
+        if (playerRenderer != null && rabbitIdle != null)
+        {
+            playerRenderer.sprite = rabbitIdle;
+        }
+
+        isJumping = false;
+    }
+
     // ===== 계단 20칸을 만드는 함수 =====
     void CreateSteps()
     {
-        // i가 0부터 19까지 총 20번 반복 (Python의 for i in range(20) 과 같음)
-        for (int i = 0; i < totalSteps; i++)
+        // ★출발 발판까지 포함해서 totalSteps + 1칸을 만든다
+        for (int i = 0; i <= totalSteps; i++)
         {
             // 세로 위치: 위로 갈수록 높아짐
             float posY = i * stepHeightGap;
