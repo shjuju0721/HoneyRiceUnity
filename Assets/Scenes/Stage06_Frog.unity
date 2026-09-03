@@ -1276,9 +1276,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   faceRunner: {fileID: 1064799462}
-  tongueVMin: 95
-  lipMarginRatio: 0.008
-  lipMarginMax: 0.15
+  flipY: 1
+  flipX: 1
+  erodeRadius: 4
+  erodeRadiusMax: 6
+  applyGlobalVMin: 1
+  tongueVMin: 50
+  countWhiteAsTongue: 1
+  countYellowAsTongue: 1
   ratio: 0
   mouthCount: 0
   tongueCount: 0
@@ -1286,6 +1291,14 @@ MonoBehaviour:
   whiteCount: 0
   yellowCount: 0
   avgV: 0
+  leftCount: 0
+  rightCount: 0
+  balance: 0
+  shift: 0
+  mirrorLR: 0
+  showDebug: 1
+  debugViewSize: 260
+  debugViewPos: {x: 10, y: 10}
 --- !u!4 &1095621367
 Transform:
   m_ObjectHideFlags: 0
