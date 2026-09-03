@@ -2,15 +2,16 @@ using UnityEngine;
 using TMPro;
 
 // ============================================================
-//  스테이지7 「젤리 분류」 — 7-5c 피라미드 쌓기
+//  스테이지7 「젤리 분류」 — 7-6 클리어 + 완료 패널
 //
 //  흐름:
 //   위에서 젤리가 뚝 떨어짐 → 카운터에 착지(통통) → 판정 대기
 //     → 맞으면 그쪽 접시로 슝 (날아가며 작아짐) → 다음 젤리
 //     → 틀리면 폴짝폴짝하고 제자리 (다시 시도)
+//   10개 다 나누면 → 축하 문구 → 완료 패널
 //
-//  ★젤리는 "껍데기(빈 오브젝트) + 그림 자식" 구조로 만든다.
-//    애니메이터가 건드리는 크기와 우리가 정하는 크기가 안 싸우게.
+//  ⚠젤리 프리팹에는 Jelly 스크립트를 붙이지 말 것.
+//    껍데기에 붙은 것과 둘 다 돌아서 위치가 어긋난다.
 // ============================================================
 public class JellySortGame : MonoBehaviour
 {
@@ -21,32 +22,36 @@ public class JellySortGame : MonoBehaviour
     [Header("젤리")]
     public GameObject grapePrefab;            // Jelly 2 (포도 = 왼쪽)
     public GameObject puddingPrefab;          // Jelly 4 (푸딩 = 오른쪽)
-    public float waitScale = 3f;              // ★판정 대기 중인 젤리 크기 (크게)
+    public float waitScale = 3f;              // 판정 대기 중인 젤리 크기
     public float pileScale = 2f;              // 접시에 쌓일 때 크기
 
     [Header("자리")]
-    public Transform dropPoint;               // 떨어지기 시작하는 곳 (화면 위)
-    public Transform landPoint;               // 착지해서 판정 기다리는 곳
-    public Transform plateLeft;               // 포도 접시
-    public Transform plateRight;              // 푸딩 접시
+    public Transform dropPoint;
+    public Transform landPoint;
+    public Transform plateLeft;
+    public Transform plateRight;
 
     [Header("접시에 쌓기 (피라미드: 아래 3 + 위 2)")]
-    public float pileGapX = 0.85f;            // 옆으로 벌어지는 간격
-    public float pileGapY = 0.7f;             // 위로 올라가는 간격
-    public float pileBaseY = 0.15f;           // 접시 바닥에서 띄우는 높이
+    public float pileGapX = 0.85f;
+    public float pileGapY = 0.7f;
+    public float pileBaseY = 0.15f;
 
     [Header("게임 규칙")]
     public int totalJelly = 10;
-    public float nextDelay = 0.25f;           // 다음 젤리까지 쉬는 시간
+    public float nextDelay = 0.25f;
 
-    [Header("화면 표시 (없어도 동작함)")]
+    [Header("화면 표시")]
     public TMP_Text bigText;
     public TMP_Text countText;
     public TMP_Text noticeText;
 
+    [Header("★완료 패널")]
+    public GameObject completePanel;          // PopupCanvas의 CompletePanel
+    public float clearWaitSec = 3f;           // 축하 문구를 보여주고 패널을 띄우기까지
+
     [Header("판정 설정")]
-    public float dirHoldSec = 0.3f;           // ★같은 방향이 이만큼 이어져야 인정
-    public float centerHoldSec = 0.15f;       // 가운데를 이만큼 봐야 잠금 해제
+    public float dirHoldSec = 0.3f;
+    public float centerHoldSec = 0.15f;
 
     [Header("표시 시간")]
     public float popSec = 0.9f;
@@ -82,6 +87,16 @@ public class JellySortGame : MonoBehaviour
     private int leftPiled = 0;
     private int rightPiled = 0;
 
+    private bool cleared = false;             // 다 끝났는가
+    private float clearTimer = 0f;            // 패널까지 남은 시간
+    private bool panelShown = false;
+
+    void Start()
+    {
+        // 시작할 때는 완료 패널을 숨긴다
+        if (completePanel != null) completePanel.SetActive(false);
+    }
+
     void Update()
     {
         if (calibration == null) return;
@@ -89,6 +104,17 @@ public class JellySortGame : MonoBehaviour
         float dt = Time.deltaTime;
 
         if (popTime > 0f) popTime -= dt;
+
+        // --- 다 끝났으면 패널 띄우기까지 기다린다 ---
+        if (cleared && !panelShown)
+        {
+            clearTimer -= dt;
+
+            if (clearTimer <= 0f)
+            {
+                ShowCompletePanel();
+            }
+        }
 
         if (running)
         {
@@ -124,6 +150,12 @@ public class JellySortGame : MonoBehaviour
         rightPiled = 0;
         current = null;
         waitNext = 0f;
+
+        cleared = false;
+        panelShown = false;
+        clearTimer = 0f;
+
+        if (completePanel != null) completePanel.SetActive(false);
 
         MakeOrder();
         ResetJudge();
@@ -161,7 +193,6 @@ public class JellySortGame : MonoBehaviour
 
         for (int attempt = 0; attempt < 60; attempt++)
         {
-            // Fisher-Yates 섞기
             for (int i = order.Length - 1; i > 0; i--)
             {
                 int j = Random.Range(0, i + 1);
@@ -275,7 +306,6 @@ public class JellySortGame : MonoBehaviour
     // 방향 1회 인정
     void Accept(int dir)
     {
-        // 잠근다 — 가운데로 돌아와야 다음 판정
         armed = false;
         centerTime = 0f;
         holdDir = 0;
@@ -284,7 +314,6 @@ public class JellySortGame : MonoBehaviour
         if (dir > 0) leftDone++;
         else rightDone++;
 
-        // 판정 대기 중인 젤리가 없으면 운동 횟수만 세고 끝
         if (current == null || !current.IsWaiting()) return;
 
         if (dir == current.correctDir)
@@ -324,13 +353,11 @@ public class JellySortGame : MonoBehaviour
 
         if (n < 3)
         {
-            // 아래 줄 3개: 왼쪽 · 가운데 · 오른쪽
             ox = (n - 1) * pileGapX;
             oy = pileBaseY;
         }
         else
         {
-            // 위 줄 2개: 아래 줄 사이 틈에 얹기
             ox = (n - 3 == 0 ? -0.5f : 0.5f) * pileGapX;
             oy = pileBaseY + pileGapY;
         }
@@ -341,15 +368,28 @@ public class JellySortGame : MonoBehaviour
     // 젤리가 접시에 도착했을 때
     void OnJellyArrived(Jelly j)
     {
-        if (sortedCount >= totalJelly)
+        if (sortedCount >= totalJelly && !cleared)
         {
             running = false;
+            cleared = true;
+            clearTimer = clearWaitSec;
 
             popMsg = "와~ 젤리를 모두 나눴어요!";
-            popTime = 3f;
-
-            if (onCleared != null) onCleared();
+            popTime = clearWaitSec;
         }
+    }
+
+    // ===== 완료 패널 띄우기 =====
+    void ShowCompletePanel()
+    {
+        panelShown = true;
+
+        if (completePanel != null) completePanel.SetActive(true);
+
+        // 큰 글자는 지운다 (패널과 겹치지 않게)
+        popTime = 0f;
+
+        if (onCleared != null) onCleared();
     }
 
     // ===== 화면 문구 =====
@@ -400,7 +440,7 @@ public class JellySortGame : MonoBehaviour
                                  + " / " + current.state;
 
         string info =
-            "[젤리게임] " + (running ? "진행중" : "멈춤") +
+            "[젤리게임] " + (running ? "진행중" : cleared ? "클리어" : "멈춤") +
             "   " + sortedCount + " / " + totalJelly + "\n" +
             "지금 젤리 " + cur + "\n" +
             "잠금 " + (armed ? "열림" : "잠김(가운데로)") +
