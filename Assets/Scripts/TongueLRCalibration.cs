@@ -6,7 +6,7 @@ using Mediapipe.Unity.Sample.FaceLandmarkDetection;
 //  스테이지7 「젤리 분류」 — 좌우 판정 기준 재기 (캘리브레이션)
 //
 //  왜 필요한가:
-//   ① 사람마다 "가만히 있을 때"의 값이 0이 아니다 (실측 +0.07)
+//   ① 사람마다 "가만히 있을 때"의 값이 0이 아니다
 //   ② 좌우로 가는 정도가 사람마다 다르다 (편측 마비면 한쪽만 잘 감)
 //   → 고정 판정선을 쓰면 약한 쪽은 영영 인정이 안 된다.
 //
@@ -18,7 +18,6 @@ using Mediapipe.Unity.Sample.FaceLandmarkDetection;
 // ============================================================
 public class TongueLRCalibration : MonoBehaviour
 {
-    // ===== 진행 단계 =====
     public enum Step
     {
         Idle,     // 아직 시작 안 함
@@ -29,53 +28,47 @@ public class TongueLRCalibration : MonoBehaviour
     }
 
     [Header("연결")]
-    public TongueScanner scanner;            // 혀 색 인식 (TongueManager에 붙어 있는 것)
+    public TongueScanner scanner;
     public MoonClimbFaceRunner faceRunner;   // ★입 벌림(jawOpen)을 읽어오는 곳
 
     [Header("화면 표시 (없어도 동작함)")]
-    public TMP_Text guideText;               // 큰 안내 문구
-    public TMP_Text progressText;            // "●●○" 같은 진행 표시
-    public TMP_Text valueText;               // 지금 값 (연습 중 참고용, 비워도 됨)
+    public TMP_Text guideText;
+    public TMP_Text progressText;
+    public TMP_Text valueText;
 
-    // ===== 기준 재기 설정 =====
     [Header("① 가운데 기준")]
-    public float centerHoldSec = 2.0f;       // 이만큼 "제대로" 유지해야 함
+    public float centerHoldSec = 2.0f;
 
     [Header("② ③ 좌우 반복")]
-    public int repsPerSide = 3;              // 방향마다 몇 번
+    public int repsPerSide = 3;
     public float detectThr = 0.04f;          // 이만큼 벗어나면 "그쪽으로 갔다"고 봄
     public float sideHoldSec = 0.3f;         // 그 상태를 이만큼 유지해야 1회 인정
     public float returnThr = 0.03f;          // 이 안으로 돌아와야 다음 회차 인정
 
     [Header("판정선 계산")]
-    public float thrRatio = 0.25f;           // 최대치의 몇 배를 판정선으로 쓸지
-    public float thrMin = 0.04f;             // ★너무 낮으면 가만히 있어도 통과함
-    public float thrMax = 0.10f;             // ★너무 높으면 끝까지 뻗어도 안 통과함
+    public float thrRatio = 0.25f;
+    public float thrMin = 0.04f;
+    public float thrMax = 0.10f;
 
     [Header("★측정 가능 조건 (안전장치)")]
-    public float jawMin = 0.55f;             // ★입을 이만큼 벌려야 함
-                                             //   웹 스펙이 "제거 금지"라고 못 박은 안전장치.
-                                             //   입 다문 채 나온 값으로 기준이 잡히는 사고를 막는다.
-    public float minRatio = 0.30f;           // 혀가 이만큼은 보여야 값을 믿음
-    public int minMouthPix = 150;            // 입 안 점 수가 이만큼은 돼야 함
+    public float jawMin = 0.45f;             // ★입을 이만큼 벌려야 함
+    public float minRatio = 0.30f;           // 혀가 이만큼은 보여야 함
+    public int minMouthPix = 150;            // 입 안 점 수
 
     [Header("값 다듬기")]
-    public float smoothTau = 0.12f;          // 값 떨림 줄이기 (클수록 차분·느림)
+    public float smoothTau = 0.12f;
 
-    // ===== 결과 (읽기만 할 것) =====
     [Header("★결과")]
     public Step step = Step.Idle;
-    public float lrBase = 0f;                // 가운데 기준값
-    public float leftMax = 0f;               // 왼쪽 최대치 (기준 뺀 값)
-    public float rightMax = 0f;              // 오른쪽 최대치 (기준 뺀 값, 양수로 저장)
-    public float thrLeft = 0.07f;            // 왼쪽 판정선
-    public float thrRight = 0.07f;           // 오른쪽 판정선
-    public bool ready = false;               // 기준 재기가 끝났는가
+    public float lrBase = 0f;
+    public float leftMax = 0f;
+    public float rightMax = 0f;
+    public float thrLeft = 0.07f;
+    public float thrRight = 0.07f;
+    public bool ready = false;
 
-    // 끝났을 때 알려주기 (게임 스크립트가 받아서 다음으로 넘어가면 됨)
     public System.Action onFinished;
 
-    // ===== 저장 이름 (PlayerPrefs) =====
     const string KEY_READY = "s7_lr_ready";
     const string KEY_BASE = "s7_lr_base";
     const string KEY_THR_L = "s7_lr_thr_left";
@@ -83,23 +76,22 @@ public class TongueLRCalibration : MonoBehaviour
     const string KEY_MAX_L = "s7_lr_max_left";
     const string KEY_MAX_R = "s7_lr_max_right";
 
-    // ===== 내부 =====
-    private float smoothed = 0f;             // 다듬은 balance
+    private float smoothed = 0f;
     private bool hasSmoothed = false;
 
-    private float centerTime = 0f;           // 가운데 유지한 시간
-    private double centerSum = 0.0;          // 가운데 값 합계
+    private float centerTime = 0f;
+    private double centerSum = 0.0;
     private int centerN = 0;
 
-    private int repDone = 0;                 // 이번 방향에서 인정된 횟수
-    private float[] peaks;                   // 회차별 최대치
-    private bool holding = false;            // 지금 그쪽으로 대고 있는 중인가
+    private int repDone = 0;
+    private float[] peaks;
+    private bool holding = false;
     private float holdTime = 0f;
     private float holdPeak = 0f;
-    private bool armed = true;               // 다음 회차를 받을 준비가 됐는가
+    private bool armed = true;
     private float returnTime = 0f;
 
-    private string notice = "";              // 상태 안내 ("입을 벌려요" 등)
+    private string notice = "";
 
     void Awake()
     {
@@ -111,7 +103,6 @@ public class TongueLRCalibration : MonoBehaviour
     {
         if (scanner == null) return;
 
-        // --- 값 다듬기 (시간 기준이라 프레임 수와 무관) ---
         float raw = scanner.balance;
 
         if (!hasSmoothed)
@@ -125,8 +116,7 @@ public class TongueLRCalibration : MonoBehaviour
             smoothed = Mathf.Lerp(smoothed, raw, k);
         }
 
-        // --- 지금 값을 믿을 수 있는 상태인가 ---
-        bool measurable = IsMeasurable();
+        bool measurable = CanMeasure();
 
         switch (step)
         {
@@ -146,10 +136,15 @@ public class TongueLRCalibration : MonoBehaviour
         UpdateTexts();
     }
 
-    // ===== 지금 재도 되는 상태인가 =====
-    // ★셋 다 통과해야 값을 쓴다. 하나라도 어긋나면 진행이 멈춘다(되돌리진 않음).
-    bool IsMeasurable()
+    // ===== ★지금 재도 되는 상태인가 (바깥에서도 쓴다) =====
+    public bool CanMeasure()
     {
+        if (scanner == null)
+        {
+            notice = "";
+            return false;
+        }
+
         // ① 입을 충분히 벌렸는가
         if (faceRunner != null && faceRunner.latestJawOpen < jawMin)
         {
@@ -175,9 +170,14 @@ public class TongueLRCalibration : MonoBehaviour
         return true;
     }
 
+    // 왜 못 재는지 (바깥에서 안내 문구로 쓴다)
+    public string NoticeText()
+    {
+        return notice;
+    }
+
     // ===== 바깥에서 부르는 것들 =====
 
-    // 기준 재기 시작
     public void StartCalibration()
     {
         step = Step.Center;
@@ -196,14 +196,12 @@ public class TongueLRCalibration : MonoBehaviour
         ResetSideState();
     }
 
-    // 중간에 그만두기
     public void Cancel()
     {
         step = Step.Idle;
         ResetSideState();
     }
 
-    // 저장된 기준 불러오기
     public void LoadSaved()
     {
         if (PlayerPrefs.GetInt(KEY_READY, 0) == 1)
@@ -218,7 +216,6 @@ public class TongueLRCalibration : MonoBehaviour
         }
     }
 
-    // 저장한 기준 지우기 (다시 재고 싶을 때)
     public void ClearSaved()
     {
         PlayerPrefs.DeleteKey(KEY_READY);
@@ -237,7 +234,7 @@ public class TongueLRCalibration : MonoBehaviour
     public int Direction()
     {
         if (!ready) return 0;
-        if (!IsMeasurable()) return 0;
+        if (!CanMeasure()) return 0;
 
         float v = smoothed - lrBase;
 
@@ -247,7 +244,7 @@ public class TongueLRCalibration : MonoBehaviour
         return 0;
     }
 
-    // 지금 값 (기준 뺀 것) — 화면 표시용
+    // 지금 값 (기준 뺀 것)
     public float CurrentValue()
     {
         return smoothed - lrBase;
@@ -255,7 +252,6 @@ public class TongueLRCalibration : MonoBehaviour
 
     // ===== ① 가운데 기준 재기 =====
     // ★관대형: 제대로 못 하고 있으면 시간을 되돌리지 않고 "멈춰서 기다린다".
-    //   제대로 하는 프레임만 평균에 넣어 기준이 더러워지지 않게 한다.
     void UpdateCenter(bool measurable)
     {
         if (!measurable) return;
@@ -274,19 +270,16 @@ public class TongueLRCalibration : MonoBehaviour
     }
 
     // ===== ② ③ 좌우 반복 =====
-    // sign = +1 이면 왼쪽, −1 이면 오른쪽
     void UpdateSide(bool measurable, int sign)
     {
         if (!measurable)
         {
-            // 못 재는 동안은 진행을 멈춘다 (되돌리지는 않음)
             holding = false;
             return;
         }
 
-        float v = (smoothed - lrBase) * sign;   // 그쪽 방향이면 양수
+        float v = (smoothed - lrBase) * sign;
 
-        // --- 다음 회차를 받을 준비: 가운데로 돌아와야 함 ---
         if (!armed)
         {
             if (Mathf.Abs(smoothed - lrBase) < returnThr)
@@ -307,7 +300,6 @@ public class TongueLRCalibration : MonoBehaviour
             return;
         }
 
-        // --- 그쪽으로 대고 있는 중인가 ---
         if (!holding)
         {
             if (v >= detectThr)
@@ -321,34 +313,26 @@ public class TongueLRCalibration : MonoBehaviour
         {
             holdTime += Time.deltaTime;
 
-            if (v > holdPeak) holdPeak = v;      // ★유지하는 동안의 최대치를 잡는다
+            if (v > holdPeak) holdPeak = v;   // ★유지하는 동안의 최대치
 
             if (v < detectThr)
             {
-                // 가운데로 돌아왔다 → 충분히 오래 댔으면 1회 인정
                 holding = false;
 
                 if (holdTime >= sideHoldSec)
                 {
-                    if (repDone < peaks.Length)
-                    {
-                        peaks[repDone] = holdPeak;
-                    }
+                    if (repDone < peaks.Length) peaks[repDone] = holdPeak;
 
                     repDone++;
                     armed = false;
                     returnTime = 0f;
 
-                    if (repDone >= repsPerSide)
-                    {
-                        FinishSide(sign);
-                    }
+                    if (repDone >= repsPerSide) FinishSide(sign);
                 }
             }
         }
     }
 
-    // 한 방향이 끝났을 때
     void FinishSide(int sign)
     {
         float med = Median(peaks, repsPerSide);
@@ -370,7 +354,6 @@ public class TongueLRCalibration : MonoBehaviour
         }
     }
 
-    // 전부 끝
     void Finish()
     {
         ready = true;
@@ -400,7 +383,7 @@ public class TongueLRCalibration : MonoBehaviour
     }
 
     // ===== 3개 중 가운데 값 =====
-    // ★평균이 아니라 중앙값을 쓴다 — 한 번 잘못 나온 값에 안 휘둘리게
+    // ★평균이 아니라 중앙값 — 한 번 잘못 나온 값에 안 휘둘리게
     float Median(float[] arr, int n)
     {
         if (n <= 0) return 0f;
@@ -432,36 +415,20 @@ public class TongueLRCalibration : MonoBehaviour
     // ===== 화면 문구 =====
     void UpdateTexts()
     {
-        if (guideText != null)
-        {
-            guideText.text = GuideMessage();
-        }
-
-        if (progressText != null)
-        {
-            progressText.text = ProgressMessage();
-        }
+        if (guideText != null) guideText.text = GuideMessage();
+        if (progressText != null) progressText.text = ProgressMessage();
 
         if (valueText != null)
         {
-            if (step == Step.Idle)
-            {
-                valueText.text = "";
-            }
-            else
-            {
-                valueText.text = "지금 " + CurrentValue().ToString("+0.00;-0.00");
-            }
+            valueText.text = (step == Step.Idle)
+                ? ""
+                : "지금 " + CurrentValue().ToString("+0.00;-0.00");
         }
     }
 
     string GuideMessage()
     {
-        // 상태 안내가 있으면 그게 먼저 (입을 벌려요 등)
-        if (step != Step.Idle && step != Step.Done && notice != "")
-        {
-            return notice;
-        }
+        if (step != Step.Idle && step != Step.Done && notice != "") return notice;
 
         switch (step)
         {
@@ -469,8 +436,7 @@ public class TongueLRCalibration : MonoBehaviour
                 return "";
 
             case Step.Center:
-                // ★§17.3 교훈: 안내 문구가 곧 인식률.
-                //   "혀를 내밀어요"라고 하면 앞으로 빼서 값이 안 나온다.
+                // ★§17.3 교훈: 안내 문구가 곧 인식률
                 return "입을 아~ 벌리고\n혀끝을 입 한가운데에 두세요";
 
             case Step.Left:
@@ -480,7 +446,7 @@ public class TongueLRCalibration : MonoBehaviour
                 return "혀를 앞으로 빼지 말고\n혀끝을 오른쪽 입꼬리에 콕! 대었다가\n가운데로 돌아오세요";
 
             case Step.Done:
-                return "다 됐어요! 잘하셨어요 👏";
+                return "다 됐어요! 잘하셨어요";
         }
 
         return "";
@@ -508,7 +474,7 @@ public class TongueLRCalibration : MonoBehaviour
         return "";
     }
 
-    // ===== ★진단 (화면 아래쪽에 표시 — 진단 그림과 안 겹치게) =====
+    // ===== ★진단 (화면 왼쪽 아래) =====
     void OnGUI()
     {
         if (scanner == null || !scanner.showDebug) return;
@@ -525,14 +491,13 @@ public class TongueLRCalibration : MonoBehaviour
         string info =
             "[기준재기] " + step + "   " + ProgressMessage() + "\n" +
             "jawOpen " + (faceRunner != null ? faceRunner.latestJawOpen.ToString("F2") : "-") +
-            "   잴수있음 " + (IsMeasurable() ? "O" : "X  " + notice) + "\n" +
+            "   잴수있음 " + (CanMeasure() ? "O" : "X  " + notice) + "\n" +
             "base " + lrBase.ToString("F3") +
             "   지금 " + CurrentValue().ToString("+0.000;-0.000") + "\n" +
             "왼쪽 최대 " + leftMax.ToString("F3") + " → 판정선 " + thrLeft.ToString("F3") + "\n" +
             "오른쪽 최대 " + rightMax.ToString("F3") + " → 판정선 " + thrRight.ToString("F3") + "\n" +
             "방향 " + dirText;
 
-        // ★화면 왼쪽 아래에 그린다 (위쪽 진단 그림과 겹치지 않게)
         float boxH = 150f;
         GUI.Label(new Rect(10f, Screen.height - boxH - 10f, 480f, boxH), info, st);
     }
