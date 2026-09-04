@@ -51,7 +51,7 @@ public static class FaceBlendshapeReader
         return (a + b) / 2f;
     }
 
-        // ===== 볼 너비 비율 계산 =====
+    // ===== 볼 너비 비율 계산 =====
     // 웹/데스크톱판에서 검증된 공식 그대로:
     //   (61-135 + 291-364 + 137-366 거리의 평균) ÷ 얼굴 세로(10-152)
     // 얼굴 세로로 나누는 이유 = 카메라에 가까이 가도 값이 안 변하게 (비율로 만듦)
@@ -104,7 +104,7 @@ public static class FaceBlendshapeReader
         return Mathf.Sqrt(dx * dx + dy * dy);
     }
 
-        // ===== 입술 안쪽 둘레 20개 점 번호 =====
+    // ===== 입술 안쪽 둘레 20개 점 번호 =====
     // 데스크톱 → 웹 → 유니티, 세 번째 이식. 순서대로 이으면 "입 안" 다각형이 됨
     // ★순서를 바꾸면 다각형이 꼬입니다
     public static readonly int[] INNER_LIP = {
@@ -138,6 +138,56 @@ public static class FaceBlendshapeReader
         for (int i = 0; i < INNER_LIP.Length; i++)
         {
             var p = landmarks[INNER_LIP[i]];
+            dest[i] = new Vector2(p.x, p.y);   // 0~1 정규화 좌표
+        }
+
+        return true;
+    }
+
+    // ============================================================
+    //  ★★ 여기부터 스테이지8(혀 위아래)용으로 새로 추가한 부분
+    // ============================================================
+
+    // ===== 입 둘레 31개 점 번호 =====
+    // ★파이썬 학습·수집 코드(collect_tongue.py / test_tongue.py)의
+    //   MOUTH_POINTS와 순서까지 완전히 같습니다. 한 개라도 바꾸면
+    //   모델이 학습 때와 다른 그림을 보게 되어 판정이 틀어집니다.
+    //
+    // 위의 INNER_LIP(20개)과 다른 점:
+    //   INNER_LIP = 입술 "안쪽" 선만  → 혀 색을 볼 때 씀 (스테이지6·7)
+    //   MOUTH_31  = 입술 "바깥"까지   → 입 주변을 네모나게 오릴 때 씀 (스테이지8)
+    public static readonly int[] MOUTH_31 = {
+        61, 146,  91, 181,  84,  17, 314, 405, 321, 375,
+       291, 308, 324, 318, 402, 317,  14,  87, 178,  88,
+        95, 185,  40,  39,  37,   0, 267, 269, 270, 409, 415
+    };
+
+    // ===== 입 둘레 31개 점의 좌표를 뽑아 담기 =====
+    // ★FillInnerLip과 똑같은 방식. 콜백 스레드 안에서 부를 것.
+    // dest: 미리 만들어둔 31칸짜리 배열
+    // 돌려주는 값: 성공했으면 true
+    public static bool FillMouth31(FaceLandmarkerResult result, Vector2[] dest)
+    {
+        if (dest == null || dest.Length < MOUTH_31.Length)
+        {
+            return false;
+        }
+
+        if (result.faceLandmarks == null || result.faceLandmarks.Count == 0)
+        {
+            return false;
+        }
+
+        var landmarks = result.faceLandmarks[0].landmarks;
+
+        if (landmarks == null || landmarks.Count < 478)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < MOUTH_31.Length; i++)
+        {
+            var p = landmarks[MOUTH_31[i]];
             dest[i] = new Vector2(p.x, p.y);   // 0~1 정규화 좌표
         }
 

@@ -33,6 +33,12 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public Vector2[] latestInnerLip = new Vector2[20];
     public bool latestHasLip = false;
 
+    // ★★스테이지8(혀 위아래)용: 입 둘레 31개 점
+    //   입술 바깥까지 포함한 점들. 입 주변을 네모나게 오려서 모델에 넣을 때 씀.
+    //   파이썬 수집·학습 코드의 MOUTH_POINTS와 같은 점·같은 순서.
+    public Vector2[] latestMouth31 = new Vector2[31];
+    public bool latestHasMouth = false;
+
     public override void Stop()
     {
       base.Stop();
@@ -187,6 +193,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       latestCheekWidth = FaceBlendshapeReader.GetCheekWidth(result);   // ★콜백 안에서 계산 끝내기
       latestSmile = FaceBlendshapeReader.GetAverageScore(result, "mouthSmileLeft", "mouthSmileRight");
       latestHasLip = FaceBlendshapeReader.FillInnerLip(result, latestInnerLip);
+      latestHasMouth = FaceBlendshapeReader.FillMouth31(result, latestMouth31);   // ★스테이지8용
 
     }
   }

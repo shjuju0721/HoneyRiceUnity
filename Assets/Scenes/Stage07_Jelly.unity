@@ -1307,6 +1307,39 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
   latestHasLip: 0
+  latestMouth31:
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  latestHasMouth: 0
 --- !u!1 &1095621365
 GameObject:
   m_ObjectHideFlags: 0
@@ -1321,6 +1354,7 @@ GameObject:
   - component: {fileID: 1095621369}
   - component: {fileID: 1095621370}
   - component: {fileID: 1095621371}
+  - component: {fileID: 1095621372}
   m_Layer: 0
   m_Name: TongueManager
   m_TagString: Untagged
@@ -1493,6 +1527,40 @@ MonoBehaviour:
   firstTimeMessage: "\uBA3C\uC800 \uC5F0\uC2B5\uC744 \uD574\uBCFC\uAE4C\uC694?"
   readyMessage: "\uBC14\uB85C \uC2DC\uC791 \uD574\uBCFC\uAE4C\uC694?"
   afterPracticeSec: 1.5
+--- !u!114 &1095621372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095621365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76cbdf98f894b9f418cd28b1f43f8b6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  faceRunner: {fileID: 1064799462}
+  modelAsset: {fileID: 5022602860645237092, guid: b7db57182b96b224d9b9a301db148f09, type: 3}
+  flipX: 1
+  flipY: 0
+  flipCropV: 0
+  margin: 1.4
+  imgSize: 128
+  confThreshold: 70
+  downThreshold: 35
+  smoothWindow: 7
+  downMinCount: 1
+  runEveryNFrames: 3
+  stableLabel: neutral
+  rawLabel: '-'
+  rawConfidence: 0
+  pDown: 0
+  pNeutral: 0
+  pUp: 0
+  hasFace: 0
+  showDebug: 1
+  debugViewSize: 200
+  debugViewPos: {x: 10, y: 10}
 --- !u!224 &1229135957 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3259285889726014650, guid: 5713b959e3c77a58fb258133fc8e4aef, type: 3}
