@@ -262,7 +262,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5608503927243274010, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 800
+      value: 900
       objectReference: {fileID: 0}
     - target: {fileID: 5608503927243274010, guid: 0b664e1931988f14c838cea9e2e764e6, type: 3}
       propertyPath: m_SizeDelta.y
@@ -1546,10 +1546,14 @@ MonoBehaviour:
   flipCropV: 0
   margin: 1.4
   imgSize: 128
-  confThreshold: 70
-  downThreshold: 35
+  jawMin: 0.2
+  useJawGate: 1
+  confUp: 40
+  confDown: 30
+  confNeutral: 40
   smoothWindow: 7
-  downMinCount: 1
+  voteUp: 5
+  voteDown: 4
   runEveryNFrames: 3
   stableLabel: neutral
   rawLabel: '-'
@@ -1558,6 +1562,8 @@ MonoBehaviour:
   pNeutral: 0
   pUp: 0
   hasFace: 0
+  jawOpenEnough: 0
+  noticeText: 
   showDebug: 1
   debugViewSize: 200
   debugViewPos: {x: 10, y: 10}

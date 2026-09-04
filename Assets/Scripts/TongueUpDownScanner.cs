@@ -13,9 +13,9 @@ using Mediapipe.Unity.Sample.FaceLandmarkDetection;
 //   ③ 모델이 down / neutral / up 확률 3개를 돌려준다
 //   ④ 흔들림을 잡아 "안정된 판정" 하나를 만든다
 //
-//  ★원본 = 파이썬 test_tongue.py. 자르는 방법·문턱값을 그대로 옮겼다.
-//    자르는 방법이 조금이라도 다르면 모델이 학습 때와 다른 그림을 보게 되어
-//    아무리 좋은 모델이라도 엉뚱한 답을 낸다.
+//  ★원본 = 파이썬 test_tongue.py + 웹 updown.js.
+//    자르는 방법은 파이썬 그대로, 판정 안정화는 웹 값을 따랐다.
+//    (웹 값은 사용자 실테스트 3차례로 겨우 맞춘 것 — 함부로 되돌리지 말 것)
 // ============================================================
 public class TongueUpDownScanner : MonoBehaviour
 {
@@ -23,12 +23,13 @@ public class TongueUpDownScanner : MonoBehaviour
     public MoonClimbFaceRunner faceRunner;    // 얼굴 점을 주는 곳
     public ModelAsset modelAsset;             // ★Assets에 넣은 tongue_model.onnx를 여기 끌어다 놓기
 
-    // ===== ★★좌표 맞추기 (스테이지7에서 겪은 그 문제) =====
+    // ===== ★★좌표 맞추기 (실측으로 확정됨 — 2026-09-04) =====
     // 웹캠 그림과 얼굴 점의 좌표계가 어긋나면 입이 아닌 엉뚱한 곳을 오려낸다.
-    // 아래 진단 창을 켜고, 오려낸 그림에 입이 제대로 나올 때까지 체크를 바꿔볼 것.
+    // ★확정값: flipX = 켬 / flipY = 끔 / flipCropV = 끔
+    //   (진단 창에 입이 가운데 나오는 것으로 확인. 바꾸지 말 것)
     [Header("★★좌표 맞추기")]
     public bool flipX = true;        // 얼굴 점의 좌우를 뒤집을지
-    public bool flipY = true;        // 얼굴 점의 위아래를 뒤집을지
+    public bool flipY = false;       // 얼굴 점의 위아래를 뒤집을지
     public bool flipCropV = false;   // ★오려낸 그림이 거꾸로 보이면 이걸 켤 것
                                      //   (위아래가 뒤집히면 up/down이 정반대로 나온다!)
 
@@ -36,15 +37,35 @@ public class TongueUpDownScanner : MonoBehaviour
     public float margin = 1.4f;      // 입 네모를 이만큼 넉넉하게 키워서 자름
     public int imgSize = 128;        // 모델이 받는 사진 크기
 
-    [Header("판정 안정화 (파이썬 test_tongue.py와 동일)")]
-    public float confThreshold = 70f;   // neutral·up은 이 % 넘게 확신해야 인정
-    public float downThreshold = 35f;   // ★down만 문턱을 낮춤 (원래 약하게 잡혀서)
-    public int smoothWindow = 7;        // 최근 몇 번의 판정을 모아 다수결할지
-    public int downMinCount = 1;        // 최근 판정에 down이 이만큼 있으면 무조건 down
+    // ============================================================
+    //  ★입 벌림 게이트
+    //  웹에서 "입 안 벌려도 판정돼서 캐릭터가 멋대로 움직인다"는
+    //  피드백으로 넣은 안전장치. 스테이지6·7과 같은 0.55.
+    //  ⚠제거 금지 — 입을 다문 채 나온 모델 출력은 전부 믿을 수 없다.
+    // ============================================================
+    [Header("★입 벌림 게이트")]
+    public float jawMin = 0.55f;
+    public bool useJawGate = true;
+
+    // ============================================================
+    //  ★판정 안정화 — 위/아래를 다르게 본다 (웹 updown.js와 동일)
+    //
+    //  왜 다르냐: "아래 판정이 느리다"는 실테스트 피드백 때문.
+    //  아래(down)는 원래 모델이 약하게 잡는다.
+    //  실측에서도 up 98.4% / neutral 97.2% / down 85.8%로 아래가 제일 낮았다.
+    //  그래서 아래만 문턱을 낮추고 표도 적게 요구한다.
+    // ============================================================
+    [Header("★판정 안정화 (웹 updown.js와 동일 — 함부로 되돌리지 말 것)")]
+    public float confUp = 40f;       // 위: 이 % 넘게 확신해야 한 표로 인정
+    public float confDown = 30f;     // ★아래: 더 낮게 (완화)
+    public float confNeutral = 40f;  // 가운데
+    public int smoothWindow = 7;     // 최근 7번의 판정을 모아 다수결
+    public int voteUp = 5;           // 위: 7표 중 5표 필요
+    public int voteDown = 4;         // ★아래: 7표 중 4표면 됨 (완화)
 
     [Header("속도 조절")]
-    public int runEveryNFrames = 3;     // 몇 프레임마다 한 번 모델을 돌릴지
-                                        //   1 = 매 프레임(느림) / 3 = 초당 20번쯤(충분)
+    public int runEveryNFrames = 2;  // 몇 프레임마다 한 번 모델을 돌릴지
+                                     //   웹의 UD_INFER_EVERY(2)와 같음
 
     // ===== 바깥에서 읽어가는 결과 =====
     [Header("판정 결과")]
@@ -55,6 +76,8 @@ public class TongueUpDownScanner : MonoBehaviour
     public float pNeutral = 0f;              // neutral 확률 (%)
     public float pUp = 0f;                   // up 확률 (%)
     public bool hasFace = false;
+    public bool jawOpenEnough = false;       // 입을 충분히 벌렸는가
+    public string noticeText = "";           // ★게임 화면에 띄울 안내 문구
 
     // ===== ★진단 표시 =====
     [Header("★진단 표시")]
@@ -69,6 +92,32 @@ public class TongueUpDownScanner : MonoBehaviour
     private Queue<string> recentPreds = new Queue<string>();   // 최근 판정들
     private int frameCounter = 0;
     private int dbgX1, dbgY1, dbgX2, dbgY2;  // 오려낸 자리 (진단 글자용)
+    private int dbgCropW = 0;                // 오려낸 원본 크기 (카메라 거리 확인용)
+
+    // ============================================================
+    //  바깥에서 쓰는 함수
+    // ============================================================
+
+    // 지금 방향을 숫자로: +1 = 위 / −1 = 아래 / 0 = 없음
+    // ★게임 스크립트는 이걸 쓰면 편하다
+    public int Direction()
+    {
+        if (stableLabel == "up") return 1;
+        if (stableLabel == "down") return -1;
+        return 0;
+    }
+
+    // 지금 판정할 수 있는 상태인가 (얼굴 있고, 입 벌렸고, 모델 준비됨)
+    public bool CanMeasure()
+    {
+        return hasFace && jawOpenEnough && worker != null;
+    }
+
+    // 게임 화면에 띄울 안내 문구
+    public string NoticeText()
+    {
+        return noticeText;
+    }
 
     // ============================================================
     //  준비
@@ -104,10 +153,22 @@ public class TongueUpDownScanner : MonoBehaviour
         if (faceRunner == null || !faceRunner.latestHasMouth)
         {
             hasFace = false;
+            jawOpenEnough = false;
+            ResetJudge("얼굴이 화면에 보이게 앉아 주세요");
             return;
         }
 
         hasFace = true;
+
+        // --- ★입 벌림 게이트 ---
+        // 입을 다문 채 나온 모델 출력은 전부 무시한다.
+        jawOpenEnough = !useJawGate || (faceRunner.latestJawOpen >= jawMin);
+
+        if (!jawOpenEnough)
+        {
+            ResetJudge("입을 아~ 벌리면 혀를 봐요");
+            return;
+        }
 
         // --- 속도 조절: N프레임마다 한 번만 모델을 돌린다 ---
         frameCounter++;
@@ -125,11 +186,33 @@ public class TongueUpDownScanner : MonoBehaviour
             return;
         }
 
+        // --- ★카메라 거리 안내 ---
+        // 오려낸 그림이 128보다 작으면 억지로 늘린 것이라 흐려진다.
+        // 들어갈 땐 128, 나갈 땐 140 (경계에서 깜빡이지 않게 — 웹과 같은 방식)
+        if (dbgCropW < 128)
+        {
+            noticeText = "카메라에 조금 더 가까이 와 주세요";
+        }
+        else if (dbgCropW >= 140)
+        {
+            noticeText = "";
+        }
+
         // --- ② 모델에 넣고 답 받기 ---
         RunModel();
 
         // --- ③ 흔들림 잡기 ---
         Stabilize();
+    }
+
+    // 판정을 중립으로 되돌리고 안내 문구를 바꾼다
+    void ResetJudge(string notice)
+    {
+        recentPreds.Clear();
+        stableLabel = "neutral";
+        rawLabel = "-";
+        rawConfidence = 0f;
+        noticeText = notice;
     }
 
     // ============================================================
@@ -202,6 +285,7 @@ public class TongueUpDownScanner : MonoBehaviour
         }
 
         dbgX1 = x1; dbgY1 = y1; dbgX2 = x2; dbgY2 = y2;
+        dbgCropW = cw;
 
         // --- 오려내면서 동시에 128×128로 줄이기 ---
         // Graphics.Blit에 배율·위치를 주면 "잘라서 늘리기"를 한 번에 해준다.
@@ -296,45 +380,49 @@ public class TongueUpDownScanner : MonoBehaviour
     }
 
     // ============================================================
-    //  ③ 흔들림 잡기 (파이썬과 같은 규칙)
+    //  ③ 흔들림 잡기 — 위/아래를 다르게 본다 (웹 updown.js와 동일)
     // ============================================================
     void Stabilize()
     {
-        // --- down 우대 문턱 ---
-        // down은 원래 확신을 약하게 받으니 down일 때만 문턱을 낮춰준다
-        float threshold = (rawLabel == "down") ? downThreshold : confThreshold;
+        // --- 방향마다 다른 확신 문턱 ---
+        float threshold;
+
+        if (rawLabel == "down") threshold = confDown;        // ★아래는 관대하게
+        else if (rawLabel == "up") threshold = confUp;
+        else threshold = confNeutral;
 
         // 문턱을 넘은 판정만 줄에 넣는다 (애매한 건 버림)
         if (rawConfidence >= threshold)
         {
             recentPreds.Enqueue(rawLabel);
+        }
 
-            while (recentPreds.Count > smoothWindow)
-            {
-                recentPreds.Dequeue();
-            }
+        while (recentPreds.Count > smoothWindow)
+        {
+            recentPreds.Dequeue();
         }
 
         if (recentPreds.Count == 0)
         {
+            stableLabel = "neutral";
             return;
         }
 
-        // --- down 우선 다수결 ---
-        int downCount = 0, neutralCount = 0, upCount = 0;
+        // --- 표 세기 ---
+        int downCount = 0, upCount = 0;
 
         foreach (string s in recentPreds)
         {
             if (s == "down") downCount++;
-            else if (s == "neutral") neutralCount++;
             else if (s == "up") upCount++;
         }
 
-        if (downCount >= downMinCount)
+        // --- ★아래를 먼저 본다 (표를 적게 요구하므로) ---
+        if (downCount >= voteDown)
         {
-            stableLabel = "down";      // down이 나오면 우선권
+            stableLabel = "down";
         }
-        else if (upCount >= neutralCount && upCount > 0)
+        else if (upCount >= voteUp)
         {
             stableLabel = "up";
         }
@@ -367,23 +455,25 @@ public class TongueUpDownScanner : MonoBehaviour
         GUI.Box(new Rect(box.x - 3, box.y - 3, box.width + 6, box.height + 6), GUIContent.none);
         GUI.DrawTexture(box, cropTex, ScaleMode.StretchToFill, false);
 
-        // 오려낸 그림
-        GUI.DrawTexture(box, cropTex);
-
         GUIStyle st = new GUIStyle(GUI.skin.label);
         st.fontSize = 15;
         st.normal.textColor = Color.white;
 
+        float jaw = (faceRunner != null) ? faceRunner.latestJawOpen : 0f;
+
         string info =
             "★모델이 보는 그림 (입이 가운데 나와야 정상)\n" +
-            "STABLE : " + stableLabel + "\n" +
+            "STABLE : " + stableLabel +
+            (jawOpenEnough ? "" : "   [입 다묾 — 판정 안 함]") + "\n" +
             "raw    : " + rawLabel + "  (" + rawConfidence.ToString("F1") + "%)\n" +
             "down " + pDown.ToString("F1") + "%  " +
             "neutral " + pNeutral.ToString("F1") + "%  " +
             "up " + pUp.ToString("F1") + "%\n" +
-            "자른자리 " + dbgX1 + "," + dbgY1 + " ~ " + dbgX2 + "," + dbgY2;
+            "jawOpen " + jaw.ToString("F2") + " (기준 " + jawMin.ToString("F2") + ")" +
+            "   원본크기 " + dbgCropW + "px\n" +
+            (noticeText == "" ? "" : "안내: " + noticeText);
 
-        GUI.Label(new Rect(box.x, box.y + box.height + 4, 460f, 110f), info, st);
+        GUI.Label(new Rect(box.x, box.y + box.height + 4, 470f, 130f), info, st);
     }
 
     void OnDestroy()
