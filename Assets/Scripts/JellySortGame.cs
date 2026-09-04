@@ -395,6 +395,10 @@ public class JellySortGame : MonoBehaviour
     // ===== 화면 문구 =====
     void UpdateTexts()
     {
+        // ★게임이 돌 때만 글자를 건드린다 (연습 문구를 지우지 않게)
+        if (!running && !cleared) return;
+
+
         if (bigText != null)
         {
             bigText.text = (popTime > 0f) ? popMsg : "";
