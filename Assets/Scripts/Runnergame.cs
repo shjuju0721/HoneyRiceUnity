@@ -12,10 +12,13 @@ using TMPro;
 //        → 혀 판정을 0.3초 유지하면 접수
 //           · 맞으면 → 점프 / 슬라이딩 동작 → 통과 → 다시 달림
 //           · 틀리면 → 갸우뚱 + "앗! 반대예요~" → 다시 기다림
-//        → 10개 다 통과하면 골인 + 완료 패널
+//        → 10개 다 통과하면 ★집이 나타나고 토코가 폴짝폴짝 → 완료 패널
 //
 //  ★실패 상태가 없다. 틀려도 계속 기다려 준다.
 //    어르신이 "내가 못했다"고 느끼지 않게 하는 것이 이 게임의 원칙.
+//
+//  ★골인은 "결승선 통과"가 아니라 "집에 도착"이다.
+//    경쟁이 아니라 여정의 끝. 이 게임의 성격에 맞춘 선택.
 // ============================================================
 public class RunnerGame : MonoBehaviour
 {
@@ -42,9 +45,27 @@ public class RunnerGame : MonoBehaviour
                                                //   웹의 UD_DIR_SEC와 같음
     public float tiltSec = 0.9f;               // 갸우뚱 시간
     public float hintSec = 2.4f;               // "앗! 반대예요~" 안내 시간
-    public float goalWaitSec = 2.0f;           // 골인 후 완료 패널까지
     public bool autoStart = true;              // ★씬이 열리면 바로 시작
                                                //   (프리뷰에서 "시작하기"를 눌러 들어오므로)
+
+    // ============================================================
+    //  ★골인 연출 — 집에 도착하기
+    // ============================================================
+    [Header("★골인 연출 (집 도착)")]
+    public GameObject housePrefab;             // ★Goal_House 프리팹
+    public float houseSpawnX = 14f;            // 집이 나타나는 자리 (화면 오른쪽 밖)
+    public float houseStopX = 1.5f;            // ★집이 멈추는 자리 (토코 앞)
+    public float houseY = 0f;                  // 집의 높이
+    public float houseScale = 1f;              // 집 크기
+
+    public int cheerCount = 3;                 // ★토코가 폴짝 뛰는 횟수
+    public float cheerUpSec = 0.28f;           // 한 번 뛰는 데 걸리는 시간
+    public float cheerHeight = 1.2f;           // 뛰는 높이
+    public float cheerRestSec = 0.12f;         // 뛰고 나서 쉬는 시간
+    public float afterCheerSec = 1.2f;         // 다 뛰고 완료 패널까지
+
+    [TextArea]
+    public string goalMessage = "집에 다 왔어요!";
 
     // ============================================================
     //  ★점프 3구간 (웹 버전과 같은 방식)
@@ -66,12 +87,14 @@ public class RunnerGame : MonoBehaviour
     // ===== 게임 상태 =====
     private enum Phase
     {
-        Idle,       // 아직 시작 안 함
-        Running,    // 달리는 중 (다음 장애물이 다가옴)
-        Waiting,    // 장애물 앞에서 답을 기다림
-        Jumping,    // ★점프 3구간 진행 중
-        Sliding,    // 슬라이딩 중
-        Goal        // 골인
+        Idle,        // 아직 시작 안 함
+        Running,     // 달리는 중 (다음 장애물이 다가옴)
+        Waiting,     // 장애물 앞에서 답을 기다림
+        Jumping,     // ★점프 3구간 진행 중
+        Sliding,     // 슬라이딩 중
+        HouseComing, // ★집이 다가오는 중
+        Cheering,    // ★토코가 폴짝폴짝
+        Finishing    // ★기뻐하고 나서 완료 패널까지 기다림
     }
 
     private Phase phase = Phase.Idle;
@@ -93,7 +116,13 @@ public class RunnerGame : MonoBehaviour
     private float slideTimer = 0f;
     private float tiltTimer = 0f;
     private float hintTimer = 0f;
-    private float goalTimer = 0f;
+    private float finishTimer = 0f;
+
+    // 골인 연출
+    private GameObject houseObj = null;        // 지금 나와 있는 집
+    private int cheerLeft = 0;                 // 몇 번 더 뛸까
+    private float cheerTimer = 0f;
+    private bool cheerResting = false;         // 뛰는 중인가 쉬는 중인가
 
     // 꼬마 원래 자리 (점프·갸우뚱 뒤 되돌리기용)
     private Vector3 playerHome;
@@ -146,6 +175,13 @@ public class RunnerGame : MonoBehaviour
         hintTimer = 0f;
         tiltTimer = 0f;
 
+        // 남아 있는 집이 있으면 치운다 (다시하기 대비)
+        if (houseObj != null)
+        {
+            Destroy(houseObj);
+            houseObj = null;
+        }
+
         // 꼬마를 땅으로 되돌린다
         if (playerTransform != null && homeSaved)
         {
@@ -160,6 +196,7 @@ public class RunnerGame : MonoBehaviour
         UpdateCountText();
 
         if (statusText != null) statusText.text = "";
+        if (completePanel != null) completePanel.SetActive(false);
 
         // 첫 장애물 내보내기
         SpawnNext();
@@ -260,8 +297,16 @@ public class RunnerGame : MonoBehaviour
                 UpdateSliding();
                 break;
 
-            case Phase.Goal:
-                UpdateGoal();
+            case Phase.HouseComing:
+                UpdateHouseComing();
+                break;
+
+            case Phase.Cheering:
+                UpdateCheering();
+                break;
+
+            case Phase.Finishing:
+                UpdateFinishing();
                 break;
         }
     }
@@ -497,15 +542,147 @@ public class RunnerGame : MonoBehaviour
 
         if (index >= order.Count)
         {
-            // 다 통과했다 → 골인
-            phase = Phase.Goal;
-            goalTimer = goalWaitSec;
-            ShowStatus("골인이에요!");
+            // ★다 통과했다 → 집이 다가온다
+            StartHouseComing();
         }
         else
         {
             phase = Phase.Running;
             SpawnNext();
+        }
+    }
+
+    // ============================================================
+    //  ★골인 연출 ① — 집이 다가옴
+    // ============================================================
+    void StartHouseComing()
+    {
+        phase = Phase.HouseComing;
+
+        // 배경은 계속 흐른다 (아직 달리는 중)
+        SetBackgroundRunning(true);
+        PlayAnim(animRun);
+
+        if (housePrefab == null)
+        {
+            // 집 프리팹이 없으면 그냥 기뻐하기로 넘어간다
+            Debug.LogWarning("[RunnerGame] House Prefab이 없어 집 연출을 건너뜁니다.");
+            StartCheering();
+            return;
+        }
+
+        houseObj = Instantiate(housePrefab,
+                               new Vector3(houseSpawnX, houseY, 0f),
+                               Quaternion.identity, transform);
+
+        houseObj.transform.localScale = Vector3.one * houseScale;
+    }
+
+    void UpdateHouseComing()
+    {
+        if (houseObj == null)
+        {
+            StartCheering();
+            return;
+        }
+
+        // 배경(땅)과 같은 속도로 흘러온다
+        float speed = (spawner != null) ? spawner.speed : 3f;
+
+        houseObj.transform.position += Vector3.left * (speed * Time.deltaTime);
+
+        // 멈춤 자리에 도착하면
+        if (houseObj.transform.position.x <= houseStopX)
+        {
+            Vector3 p = houseObj.transform.position;
+            p.x = houseStopX;
+            houseObj.transform.position = p;
+
+            StartCheering();
+        }
+    }
+
+    // ============================================================
+    //  ★골인 연출 ② — 토코가 폴짝폴짝
+    // ============================================================
+    void StartCheering()
+    {
+        phase = Phase.Cheering;
+
+        // ★배경을 멈춘다 (집 앞에 도착했으니)
+        SetBackgroundRunning(false);
+
+        cheerLeft = cheerCount;
+        cheerTimer = cheerUpSec;
+        cheerResting = false;
+
+        PlayAnim(animJump);
+        ShowStatus(goalMessage);
+    }
+
+    void UpdateCheering()
+    {
+        cheerTimer -= Time.deltaTime;
+
+        if (!cheerResting)
+        {
+            // --- 뛰는 중 : 올라갔다 내려오는 포물선 ---
+            float t = 1f - Mathf.Clamp01(cheerTimer / cheerUpSec);   // 0 → 1
+            float h = Mathf.Sin(t * Mathf.PI) * cheerHeight;
+
+            SetPlayerHeight(h);
+
+            if (cheerTimer <= 0f)
+            {
+                SetPlayerHeight(0f);
+
+                cheerLeft--;
+
+                if (cheerLeft <= 0)
+                {
+                    // 다 뛰었다
+                    PlayAnim(animRun);
+
+                    phase = Phase.Finishing;
+                    finishTimer = afterCheerSec;
+                    return;
+                }
+
+                // 잠깐 쉬었다가 또 뛴다
+                cheerResting = true;
+                cheerTimer = cheerRestSec;
+            }
+        }
+        else
+        {
+            // --- 쉬는 중 ---
+            SetPlayerHeight(0f);
+
+            if (cheerTimer <= 0f)
+            {
+                cheerResting = false;
+                cheerTimer = cheerUpSec;
+
+                PlayAnim(animJump);
+            }
+        }
+    }
+
+    // ============================================================
+    //  ★골인 연출 ③ — 완료 패널
+    // ============================================================
+    void UpdateFinishing()
+    {
+        finishTimer -= Time.deltaTime;
+
+        if (finishTimer <= 0f)
+        {
+            phase = Phase.Idle;
+
+            if (completePanel != null)
+            {
+                completePanel.SetActive(true);
+            }
         }
     }
 
@@ -515,24 +692,6 @@ public class RunnerGame : MonoBehaviour
         if (playerTransform == null || !homeSaved) return;
 
         playerTransform.position = playerHome + Vector3.up * h;
-    }
-
-    // ===== 골인 =====
-    void UpdateGoal()
-    {
-        goalTimer -= Time.deltaTime;
-
-        if (goalTimer <= 0f)
-        {
-            phase = Phase.Idle;
-
-            SetBackgroundRunning(false);
-
-            if (completePanel != null)
-            {
-                completePanel.SetActive(true);
-            }
-        }
     }
 
     // ============================================================

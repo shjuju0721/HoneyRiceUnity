@@ -39,13 +39,37 @@ public class TongueUpDownScanner : MonoBehaviour
 
     // ============================================================
     //  ★입 벌림 게이트
-    //  웹에서 "입 안 벌려도 판정돼서 캐릭터가 멋대로 움직인다"는
-    //  피드백으로 넣은 안전장치. 스테이지6·7과 같은 0.55.
-    //  ⚠제거 금지 — 입을 다문 채 나온 모델 출력은 전부 믿을 수 없다.
+    //  입을 다문 채 나온 모델 출력은 믿을 수 없다.
+    //  ⚠0.55(스테이지6·7 값)는 혀를 올릴 때 턱이 닫혀서 막혀 버린다.
+    //    실측으로 0.20이 적당했다.
     // ============================================================
     [Header("★입 벌림 게이트")]
-    public float jawMin = 0.55f;
+    public float jawMin = 0.20f;     // ★실측 확정값
     public bool useJawGate = true;
+
+    // ============================================================
+    //  ★★입 안 밝기 게이트 (2026-09-06 추가)
+    //
+    //  문제: 입만 크게 벌리고 혀는 아래 깔린 상태에서
+    //        모델이 up 49~74%로 제멋대로 답한다.
+    //        학습 데이터에 없는 그림이라 아무 말이나 하는 것.
+    //
+    //  단서: 그때 입 안 밝기(avgV)가 34~50으로 뚝 떨어진다.
+    //        혀가 보일 때는 116~130이다. 2~3배 차이라 잘 갈린다.
+    //        → 혀가 없으면 어두운 목구멍이 보이기 때문.
+    //
+    //  ⚠이 값은 조명에 따라 통째로 움직인다.
+    //    시연 장소가 바뀌면 반드시 다시 재고 맞출 것.
+    //
+    //  실측 (2026-09-06, 발표 장소 기준):
+    //    입만 벌림   34 / 50     ← 막아야 하는 구간
+    //    혀 위로     116 / 122
+    //    혀 아래로   124
+    //    가만히      130
+    // ============================================================
+    [Header("★★입 안 밝기 게이트 (조명 바뀌면 다시 잴 것)")]
+    public bool useBrightGate = true;
+    public float brightMin = 70f;    // ★이보다 어두우면 혀가 안 보이는 것으로 본다
 
     // ============================================================
     //  ★판정 안정화 — 위/아래를 다르게 본다 (웹 updown.js와 동일)
@@ -75,8 +99,10 @@ public class TongueUpDownScanner : MonoBehaviour
     public float pDown = 0f;                 // down 확률 (%)
     public float pNeutral = 0f;              // neutral 확률 (%)
     public float pUp = 0f;                   // up 확률 (%)
+    public float avgV = 0f;                  // ★입 안 평균 밝기 (0~255)
     public bool hasFace = false;
     public bool jawOpenEnough = false;       // 입을 충분히 벌렸는가
+    public bool brightEnough = false;        // ★혀가 보일 만큼 밝은가
     public string noticeText = "";           // ★게임 화면에 띄울 안내 문구
 
     // ===== ★진단 표시 =====
@@ -107,10 +133,11 @@ public class TongueUpDownScanner : MonoBehaviour
         return 0;
     }
 
-    // 지금 판정할 수 있는 상태인가 (얼굴 있고, 입 벌렸고, 모델 준비됨)
+    // 지금 판정할 수 있는 상태인가
+    // (얼굴 있고, 입 벌렸고, 혀가 보일 만큼 밝고, 모델 준비됨)
     public bool CanMeasure()
     {
-        return hasFace && jawOpenEnough && worker != null;
+        return hasFace && jawOpenEnough && brightEnough && worker != null;
     }
 
     // 게임 화면에 띄울 안내 문구
@@ -154,6 +181,7 @@ public class TongueUpDownScanner : MonoBehaviour
         {
             hasFace = false;
             jawOpenEnough = false;
+            brightEnough = false;
             ResetJudge("얼굴이 화면에 보이게 앉아 주세요");
             return;
         }
@@ -162,10 +190,13 @@ public class TongueUpDownScanner : MonoBehaviour
 
         // --- ★입 벌림 게이트 ---
         // 입을 다문 채 나온 모델 출력은 전부 무시한다.
+        // ★안내 문구는 띄우지 않는다 — 혀 동작을 하면 입은 저절로 벌어지므로
+        //   "입을 벌리세요"는 오히려 무슨 동작인지 헷갈리게 만든다.
         jawOpenEnough = !useJawGate || (faceRunner.latestJawOpen >= jawMin);
 
         if (!jawOpenEnough)
         {
+            brightEnough = false;
             ResetJudge("");
             return;
         }
@@ -181,8 +212,20 @@ public class TongueUpDownScanner : MonoBehaviour
         frameCounter = 0;
 
         // --- ① 입 주변을 오려서 128×128 사진 만들기 ---
+        //     (이 안에서 avgV도 같이 잰다)
         if (!MakeCrop())
         {
+            return;
+        }
+
+        // --- ★★입 안 밝기 게이트 ---
+        // 혀가 안 보이면 어두운 목구멍만 잡힌다.
+        // 학습에 없던 그림이라 모델이 아무 말이나 하므로 판정을 접지 않는다.
+        brightEnough = !useBrightGate || (avgV >= brightMin);
+
+        if (!brightEnough)
+        {
+            ResetJudge("");
             return;
         }
 
@@ -313,6 +356,15 @@ public class TongueUpDownScanner : MonoBehaviour
         Color32[] px32 = cropTex.GetPixels32();
         int k = 0;
 
+        // ★입 안 밝기 재기 (게이트용)
+        //   그림 한가운데 절반 영역만 본다. 가장자리는 입술·턱·볼이라 밝아서
+        //   전체 평균을 쓰면 목구멍이 어두워도 티가 안 난다.
+        double vSum = 0.0;
+        int vCount = 0;
+
+        int q0 = imgSize / 4;          // 32
+        int q1 = imgSize - imgSize / 4; // 96
+
         for (int row = 0; row < imgSize; row++)
         {
             // row 0 = 그림의 맨 윗줄
@@ -327,8 +379,22 @@ public class TongueUpDownScanner : MonoBehaviour
                 inputData[k++] = c.r;
                 inputData[k++] = c.g;
                 inputData[k++] = c.b;
+
+                // 가운데 절반만 밝기 계산에 넣는다
+                if (row >= q0 && row < q1 && col >= q0 && col < q1)
+                {
+                    // HSV의 V = R·G·B 중 가장 큰 값 (TongueScanner와 같은 방식)
+                    int mx = c.r;
+                    if (c.g > mx) mx = c.g;
+                    if (c.b > mx) mx = c.b;
+
+                    vSum += mx;
+                    vCount++;
+                }
             }
         }
+
+        avgV = (vCount > 0) ? (float)(vSum / vCount) : 0f;
 
         return true;
     }
@@ -461,19 +527,25 @@ public class TongueUpDownScanner : MonoBehaviour
 
         float jaw = (faceRunner != null) ? faceRunner.latestJawOpen : 0f;
 
+        // 왜 판정을 안 하는지 이유를 적는다
+        string blocked = "";
+
+        if (!jawOpenEnough) blocked = "   [입 다묾 — 판정 안 함]";
+        else if (!brightEnough) blocked = "   [혀 안 보임 — 판정 안 함]";
+
         string info =
             "★모델이 보는 그림 (입이 가운데 나와야 정상)\n" +
-            "STABLE : " + stableLabel +
-            (jawOpenEnough ? "" : "   [입 다묾 — 판정 안 함]") + "\n" +
+            "STABLE : " + stableLabel + blocked + "\n" +
             "raw    : " + rawLabel + "  (" + rawConfidence.ToString("F1") + "%)\n" +
             "down " + pDown.ToString("F1") + "%  " +
             "neutral " + pNeutral.ToString("F1") + "%  " +
             "up " + pUp.ToString("F1") + "%\n" +
-            "jawOpen " + jaw.ToString("F2") + " (기준 " + jawMin.ToString("F2") + ")" +
-            "   원본크기 " + dbgCropW + "px\n" +
-            (noticeText == "" ? "" : "안내: " + noticeText);
+            "jawOpen " + jaw.ToString("F2") + " (기준 " + jawMin.ToString("F2") + ")   " +
+            "★avgV " + avgV.ToString("F0") + " (기준 " + brightMin.ToString("F0") + ")\n" +
+            "원본크기 " + dbgCropW + "px" +
+            (noticeText == "" ? "" : "   안내: " + noticeText);
 
-        GUI.Label(new Rect(box.x, box.y + box.height + 4, 470f, 130f), info, st);
+        GUI.Label(new Rect(box.x, box.y + box.height + 4, 520f, 130f), info, st);
     }
 
     void OnDestroy()

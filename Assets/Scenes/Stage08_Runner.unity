@@ -1154,6 +1154,8 @@ MonoBehaviour:
   imgSize: 128
   jawMin: 0.2
   useJawGate: 1
+  useBrightGate: 0
+  brightMin: 70
   confUp: 40
   confDown: 30
   confNeutral: 40
@@ -1167,10 +1169,12 @@ MonoBehaviour:
   pDown: 0
   pNeutral: 0
   pUp: 0
+  avgV: 0
   hasFace: 0
   jawOpenEnough: 0
+  brightEnough: 0
   noticeText: 
-  showDebug: 0
+  showDebug: 1
   debugViewSize: 200
   debugViewPos: {x: 10, y: 10}
 --- !u!224 &1229135957 stripped
@@ -1446,7 +1450,18 @@ MonoBehaviour:
   dirHoldSec: 0.3
   tiltSec: 0.9
   hintSec: 2.4
-  goalWaitSec: 2
+  autoStart: 1
+  housePrefab: {fileID: 7580909342396192750, guid: 18eeebdae84956543a2931fff683f5fd, type: 3}
+  houseSpawnX: 14
+  houseStopX: 1.5
+  houseY: 0
+  houseScale: 1
+  cheerCount: 3
+  cheerUpSec: 0.28
+  cheerHeight: 1.2
+  cheerRestSec: 0.12
+  afterCheerSec: 1.2
+  goalMessage: "\uC9D1\uC5D0 \uB2E4 \uC654\uC5B4\uC694!"
   platformTopY: 4
   riseSec: 0.38
   onTopSec: 3
@@ -1490,7 +1505,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 700, y: 400}
-  m_SizeDelta: {x: 600, y: 250}
+  m_SizeDelta: {x: 700, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479875011
 MonoBehaviour:
