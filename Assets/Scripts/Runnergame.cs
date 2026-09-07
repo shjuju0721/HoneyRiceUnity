@@ -8,7 +8,7 @@ using TMPro;
 //  흐름:
 //   시작 → 꼬마가 달림(배경 흐름)
 //        → 장애물이 앞에 와서 멈춤 (배경·꼬마도 같이 멈춤)
-//        → 안내 문구: "혀를 위로 올려 폴짝 뛰어요"
+//        → 안내 문구: "혀를 윗입술까지 올려 보세요"
 //        → 혀 판정을 0.3초 유지하면 접수
 //           · 맞으면 → 점프 / 슬라이딩 동작 → 통과 → 다시 달림
 //           · 틀리면 → 갸우뚱 + "앗! 반대예요~" → 다시 기다림
@@ -40,14 +40,28 @@ public class RunnerGame : MonoBehaviour
     public int totalObstacles = 10;            // 장애물 개수
     public float dirHoldSec = 0.3f;            // ★같은 방향을 이만큼 유지해야 접수
                                                //   웹의 UD_DIR_SEC와 같음
-    public float actionSec = 0.9f;             // 점프·슬라이딩 동작에 걸리는 시간
     public float tiltSec = 0.9f;               // 갸우뚱 시간
     public float hintSec = 2.4f;               // "앗! 반대예요~" 안내 시간
     public float goalWaitSec = 2.0f;           // 골인 후 완료 패널까지
+    public bool autoStart = true;              // ★씬이 열리면 바로 시작
+                                               //   (프리뷰에서 "시작하기"를 눌러 들어오므로)
 
-    [Header("점프 높이")]
-    public float jumpHeight = 2.5f;            // ★발판 위로 올라가는 높이
-                                               //   발판에 발이 닿게 눈으로 맞출 것
+    // ============================================================
+    //  ★점프 3구간 (웹 버전과 같은 방식)
+    //
+    //  ① 뛰어오르기 : 땅 → 발판 높이까지 올라감
+    //  ② 발판 위 달리기 : 높이를 유지한 채 달리기 애니메이션
+    //     → 이 동안 발판이 밑으로 흘러가서 "건너는" 것처럼 보인다
+    //  ③ 뛰어내리기 : 발판 → 땅으로 내려옴
+    // ============================================================
+    [Header("★점프 3구간")]
+    public float platformTopY = 4.64f;         // ★발판 윗면 높이. 꼬마 발이 여기에 닿는다
+    public float riseSec = 0.38f;              // ① 뛰어오르는 시간
+    public float onTopSec = 0.30f;             // ② 발판 위를 달리는 시간
+    public float fallSec = 0.34f;              // ③ 뛰어내리는 시간
+
+    [Header("슬라이딩")]
+    public float slideSec = 0.9f;              // 엎드려 미끄러지는 시간
 
     // ===== 게임 상태 =====
     private enum Phase
@@ -55,11 +69,17 @@ public class RunnerGame : MonoBehaviour
         Idle,       // 아직 시작 안 함
         Running,    // 달리는 중 (다음 장애물이 다가옴)
         Waiting,    // 장애물 앞에서 답을 기다림
-        Acting,     // 점프·슬라이딩 동작 중
+        Jumping,    // ★점프 3구간 진행 중
+        Sliding,    // 슬라이딩 중
         Goal        // 골인
     }
 
     private Phase phase = Phase.Idle;
+
+    // 점프 3구간 중 어디인가
+    private enum JumpStep { Rise, OnTop, Fall }
+    private JumpStep jumpStep = JumpStep.Rise;
+    private float jumpTimer = 0f;
 
     private List<Obstacle.Kind> order = new List<Obstacle.Kind>();  // 장애물 순서표
     private int index = 0;                     // 지금 몇 번째 장애물인가
@@ -70,7 +90,7 @@ public class RunnerGame : MonoBehaviour
     private float dirTimer = 0f;
 
     // 연출 시계
-    private float actTimer = 0f;
+    private float slideTimer = 0f;
     private float tiltTimer = 0f;
     private float hintTimer = 0f;
     private float goalTimer = 0f;
@@ -101,9 +121,15 @@ public class RunnerGame : MonoBehaviour
         if (completePanel != null) completePanel.SetActive(false);
         if (statusText != null) statusText.text = "";
         if (countText != null) countText.text = "";
+
+        // ★씬이 열리면 바로 게임 시작
+        if (autoStart)
+        {
+            StartGame();
+        }
     }
 
-    // ★StagePreview의 시작 버튼이 이걸 부른다
+    // ★프리뷰의 시작 버튼이나 다시하기 버튼이 이걸 부른다
     public void StartGame()
     {
         // --- 순서표 만들기 ---
@@ -117,6 +143,15 @@ public class RunnerGame : MonoBehaviour
 
         lastDir = 0;
         dirTimer = 0f;
+        hintTimer = 0f;
+        tiltTimer = 0f;
+
+        // 꼬마를 땅으로 되돌린다
+        if (playerTransform != null && homeSaved)
+        {
+            playerTransform.position = playerHome;
+            playerTransform.rotation = Quaternion.identity;
+        }
 
         phase = Phase.Running;
 
@@ -213,29 +248,22 @@ public class RunnerGame : MonoBehaviour
 
         switch (phase)
         {
-            case Phase.Running:
-                UpdateRunning();
-                break;
-
             case Phase.Waiting:
                 UpdateWaiting();
                 break;
 
-            case Phase.Acting:
-                UpdateActing();
+            case Phase.Jumping:
+                UpdateJumping();
+                break;
+
+            case Phase.Sliding:
+                UpdateSliding();
                 break;
 
             case Phase.Goal:
                 UpdateGoal();
                 break;
         }
-    }
-
-    // ===== 달리는 중 =====
-    void UpdateRunning()
-    {
-        // 장애물이 도착하면 spawner가 알려 준다 (OnObstacleArrived)
-        // 여기서는 특별히 할 일이 없다
     }
 
     // ===== 장애물 앞에서 답을 기다림 =====
@@ -246,22 +274,43 @@ public class RunnerGame : MonoBehaviour
             return;
         }
 
-        // --- 판정할 수 없는 상태면 안내만 ---
-        if (scanner == null || !scanner.CanMeasure())
+        // ============================================================
+        //  ★얼굴을 아예 못 찾을 때만 따로 안내한다.
+        //    입을 벌렸는지는 안내하지 않는다 —
+        //    혀 동작을 하면 입은 저절로 벌어지므로,
+        //    "입을 벌리세요"는 오히려 무슨 동작을 하라는 건지 헷갈리게 만든다.
+        // ============================================================
+        if (scanner == null || !scanner.hasFace)
         {
             lastDir = 0;
             dirTimer = 0f;
 
-            ShowStatus(scanner != null && scanner.NoticeText() != ""
-                       ? scanner.NoticeText()
-                       : "얼굴이 화면에 보이게 앉아 주세요");
+            ShowStatus("얼굴이 화면에 보이게\n앉아 주세요");
             return;
         }
 
-        // --- 안내 문구 (틀렸을 때는 그 안내가 우선) ---
+        // --- 카메라가 너무 멀 때만 그 안내를 우선 ---
+        if (scanner.NoticeText() != "")
+        {
+            lastDir = 0;
+            dirTimer = 0f;
+
+            ShowStatus(scanner.NoticeText());
+            return;
+        }
+
+        // --- 안내 문구 (틀렸을 때는 그 안내가 잠깐 우선) ---
         if (hintTimer <= 0f)
         {
             ShowStatus(current.GuideText());
+        }
+
+        // --- 아직 입을 안 벌렸으면 판정만 쉰다 (문구는 그대로) ---
+        if (!scanner.CanMeasure())
+        {
+            lastDir = 0;
+            dirTimer = 0f;
+            return;
         }
 
         // --- 방향을 얼마나 유지했나 ---
@@ -303,32 +352,43 @@ public class RunnerGame : MonoBehaviour
         {
             // ★정답 — 갸우뚱 중이어도 즉시 통과시킨다
             tiltTimer = 0f;
+            hintTimer = 0f;
 
             if (playerTransform != null)
             {
                 playerTransform.rotation = Quaternion.identity;
             }
 
-            if (dir > 0)
-            {
-                upCount++;
-                PlayAnim(animJump);
-                ShowStatus("폴짝!");
-            }
-            else
-            {
-                downCount++;
-                PlayAnim(animSlide);
-                ShowStatus("슝~!");
-            }
+            string passMsg = current.PassText();
 
             current.Pass();
             current = null;
 
-            phase = Phase.Acting;
-            actTimer = actionSec;
-
             SetBackgroundRunning(true);
+
+            if (dir > 0)
+            {
+                // ★점프 시작 — 3구간 중 첫 번째부터
+                upCount++;
+
+                phase = Phase.Jumping;
+                jumpStep = JumpStep.Rise;
+                jumpTimer = riseSec;
+
+                PlayAnim(animJump);
+            }
+            else
+            {
+                // 슬라이딩
+                downCount++;
+
+                phase = Phase.Sliding;
+                slideTimer = slideSec;
+
+                PlayAnim(animSlide);
+            }
+
+            ShowStatus(passMsg);
         }
         else
         {
@@ -338,65 +398,123 @@ public class RunnerGame : MonoBehaviour
             tiltTimer = tiltSec;
             hintTimer = hintSec;
 
-            ShowStatus("앗! 반대예요~  " + current.GuideText());
+            ShowStatus("앗! 반대예요~\n" + current.GuideText());
         }
     }
 
-    // ===== 점프·슬라이딩 동작 중 =====
-    void UpdateActing()
+    // ============================================================
+    //  ★점프 3구간
+    // ============================================================
+    void UpdateJumping()
     {
-        actTimer -= Time.deltaTime;
+        jumpTimer -= Time.deltaTime;
 
-        // 점프면 포물선으로 올라갔다 내려온다
-        if (playerTransform != null && playerAnimator != null)
+        // 땅에서 발판 윗면까지의 높이 차이
+        float climb = platformTopY - playerHome.y;
+
+        switch (jumpStep)
         {
-            float t = 1f - Mathf.Clamp01(actTimer / actionSec);   // 0 → 1
+            // --- ① 뛰어오르기 : 땅 → 발판 ---
+            case JumpStep.Rise:
+                {
+                    float t = 1f - Mathf.Clamp01(jumpTimer / riseSec);   // 0 → 1
 
-            // 지금 점프 중인지 확인 (up으로 통과했을 때만 띄운다)
-            bool isJumping = playerAnimator.GetCurrentAnimatorStateInfo(0)
-                                           .IsName(animJump);
+                    // 처음엔 빠르고 끝에서 느려지게 (자연스러운 도약)
+                    float ease = Mathf.Sin(t * Mathf.PI * 0.5f);
 
-            if (isJumping)
-            {
-                // sin 곡선 = 올라갔다 내려오는 포물선
-                float h = Mathf.Sin(t * Mathf.PI) * jumpHeight;
-                playerTransform.position = playerHome + Vector3.up * h;
-            }
-            else
-            {
-                // ★슬라이딩 중에는 땅에 붙여 둔다
-                //   (직전 점프 높이가 남아 공중에서 미끄러지는 것 방지)
-                playerTransform.position = playerHome;
-            }
+                    SetPlayerHeight(climb * ease);
+
+                    if (jumpTimer <= 0f)
+                    {
+                        // ★발판 위에 올라섰다 → 달리기로 바꾼다
+                        jumpStep = JumpStep.OnTop;
+                        jumpTimer = onTopSec;
+
+                        SetPlayerHeight(climb);
+                        PlayAnim(animRun);
+                    }
+                }
+                break;
+
+            // --- ② 발판 위 달리기 : 높이 유지 ---
+            case JumpStep.OnTop:
+                {
+                    SetPlayerHeight(climb);   // ★그대로 유지
+
+                    if (jumpTimer <= 0f)
+                    {
+                        jumpStep = JumpStep.Fall;
+                        jumpTimer = fallSec;
+
+                        PlayAnim(animJump);
+                    }
+                }
+                break;
+
+            // --- ③ 뛰어내리기 : 발판 → 땅 ---
+            case JumpStep.Fall:
+                {
+                    float t = 1f - Mathf.Clamp01(jumpTimer / fallSec);   // 0 → 1
+
+                    // 처음엔 느리고 끝에서 빠르게 (중력에 끌리듯)
+                    float ease = 1f - Mathf.Cos(t * Mathf.PI * 0.5f);
+
+                    SetPlayerHeight(climb * (1f - ease));
+
+                    if (jumpTimer <= 0f)
+                    {
+                        SetPlayerHeight(0f);
+                        FinishAction();
+                    }
+                }
+                break;
         }
+    }
 
-        if (actTimer <= 0f)
+    // ===== 슬라이딩 중 =====
+    void UpdateSliding()
+    {
+        slideTimer -= Time.deltaTime;
+
+        // ★땅에 붙여 둔다 (직전 점프 높이가 남지 않게)
+        SetPlayerHeight(0f);
+
+        if (slideTimer <= 0f)
         {
-            // 원래 자리·달리기로 되돌리기
-            if (playerTransform != null)
-            {
-                playerTransform.position = playerHome;
-            }
-
-            PlayAnim(animRun);
-            ShowStatus("");
-
-            index++;
-            UpdateCountText();
-
-            if (index >= order.Count)
-            {
-                // 다 통과했다 → 골인
-                phase = Phase.Goal;
-                goalTimer = goalWaitSec;
-                ShowStatus("골인이에요! 🎉");
-            }
-            else
-            {
-                phase = Phase.Running;
-                SpawnNext();
-            }
+            FinishAction();
         }
+    }
+
+    // ===== 동작이 끝났을 때 (점프·슬라이딩 공통) =====
+    void FinishAction()
+    {
+        SetPlayerHeight(0f);
+        PlayAnim(animRun);
+        ShowStatus("");
+
+        index++;
+        UpdateCountText();
+
+        if (index >= order.Count)
+        {
+            // 다 통과했다 → 골인
+            phase = Phase.Goal;
+            goalTimer = goalWaitSec;
+            ShowStatus("골인이에요!");
+        }
+        else
+        {
+            phase = Phase.Running;
+            SpawnNext();
+        }
+    }
+
+    // ===== 꼬마를 원래 자리에서 h만큼 위로 =====
+    void SetPlayerHeight(float h)
+    {
+        if (playerTransform == null || !homeSaved) return;
+
+        playerTransform.position = playerHome + Vector3.up * h;
     }
 
     // ===== 골인 =====

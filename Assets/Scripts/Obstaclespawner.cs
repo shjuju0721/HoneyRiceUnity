@@ -28,8 +28,10 @@ public class ObstacleSpawner : MonoBehaviour
     [Header("★장애물이 태어나는 자리")]
     public float spawnX = 14f;        // 화면 오른쪽 밖. 안 보이는 곳이어야 한다
 
-    [Header("★장애물이 멈추는 자리")]
-    public float stopX = -1.0f;       // ★꼬마 바로 앞. 꼬마 X보다 조금 오른쪽
+    [Header("★장애물이 멈추는 자리 (종류마다 다르게)")]
+    public float stopXJump = -1.0f;   // ★점프 장애물(발판+가시)이 멈추는 자리
+    public float stopXDuck = -1.0f;   // ★숙이기 장애물(내려온 담)이 멈추는 자리
+                                      //   그림 폭이 달라서 따로 맞춰야 한다
 
     [Header("★점프 장애물 (발판 + 가시)")]
     public float jumpY = 0f;          // 위아래 위치
@@ -89,7 +91,7 @@ public class ObstacleSpawner : MonoBehaviour
         for (int i = 0; i < all.Length; i++)
         {
             all[i].speed = speed;
-            all[i].stopX = stopX;
+            all[i].stopX = (all[i].kind == Obstacle.Kind.Jump) ? stopXJump : stopXDuck;
             all[i].despawnX = despawnX;
 
             Vector3 p = all[i].transform.position;
@@ -139,7 +141,7 @@ public class ObstacleSpawner : MonoBehaviour
 
         ob.kind = kind;
         ob.speed = speed;
-        ob.stopX = stopX;
+        ob.stopX = (kind == Obstacle.Kind.Jump) ? stopXJump : stopXDuck;
         ob.despawnX = despawnX;
 
         // 멈춤선에 도착하면 알려 달라고 부탁
@@ -184,10 +186,13 @@ public class ObstacleSpawner : MonoBehaviour
     // ===== Scene 뷰에 기준선 그리기 (눈으로 맞추기 쉽게) =====
     void OnDrawGizmos()
     {
-        // 멈춤선 = 초록 세로줄
+        // 멈춤선 = 초록(점프) / 노랑(숙이기) 세로줄
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(new Vector3(stopX, -10f, 0f), new Vector3(stopX, 10f, 0f));
+        Gizmos.DrawLine(new Vector3(stopXJump, -10f, 0f), new Vector3(stopXJump, 10f, 0f));
 
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(new Vector3(stopXDuck, -10f, 0f), new Vector3(stopXDuck, 10f, 0f));
+        
         // 태어나는 자리 = 파란 세로줄
         Gizmos.color = Color.cyan;
         Gizmos.DrawLine(new Vector3(spawnX, -10f, 0f), new Vector3(spawnX, 10f, 0f));

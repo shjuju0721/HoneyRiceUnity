@@ -166,7 +166,7 @@ public class TongueUpDownScanner : MonoBehaviour
 
         if (!jawOpenEnough)
         {
-            ResetJudge("입을 아~ 벌리면 혀를 봐요");
+            ResetJudge("");
             return;
         }
 

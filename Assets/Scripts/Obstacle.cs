@@ -30,7 +30,7 @@ public class Obstacle : MonoBehaviour
 
     [Header("멈추는 자리")]
     public float stopX = 0f;          // ★여기까지 오면 멈춘다
-                                      //   꼬마보다 조금 오른쪽에 두면 된다
+                                      //   종류마다 그림 폭이 달라서 ObstacleSpawner가 따로 넣어 준다
 
     [Header("사라지는 자리")]
     public float despawnX = -15f;     // ★여기보다 왼쪽으로 가면 삭제
@@ -97,14 +97,28 @@ public class Obstacle : MonoBehaviour
         return (kind == Kind.Jump) ? 1 : -1;
     }
 
-    // 안내 문구
+    // ===== 안내 문구 =====
+    // ★어떤 동작인지가 아니라 "몸을 어떻게 움직이는지"를 적는다.
+    //   웹에서 얻은 교훈: 안내 문구가 곧 인식률이다.
+    //   "혀를 위로"보다 "혀를 윗입술까지"가 실제 동작을 더 크게 만든다.
     public string GuideText()
     {
         if (kind == Kind.Jump)
         {
-            return "혀를 위로 올려 폴짝 뛰어요";
+            return "혀를 윗입술까지\n올려 보세요";
         }
 
-        return "혀를 아래로 내려 쏙 지나가요";
+        return "혀를 아래로\n최대한 내밀어 주세요";
+    }
+
+    // 통과할 때 나오는 문구
+    public string PassText()
+    {
+        if (kind == Kind.Jump)
+        {
+            return "폴짝!";
+        }
+
+        return "밑으로 슝~";
     }
 }
