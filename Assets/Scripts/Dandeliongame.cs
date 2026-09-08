@@ -27,6 +27,7 @@ public class DandelionGame : MonoBehaviour
     public SwayInWind sway;                // 민들레 흔들림(기침 때 휘청이게)
     public GameObject seedPrefab;          // 날아가는 홀씨 프리팹
     public Transform seedSpawnPoint;       // 홀씨가 태어나는 자리(솜뭉치 한가운데)
+    public CoughCalibration calibration;   // ★이 줄 추가
 
     [Header("민들레 그림 4장 (가득 → 빈 줄기)")]
     public Sprite stage3;                  // 가득
@@ -106,7 +107,17 @@ public class DandelionGame : MonoBehaviour
 
         if (autoStart)
         {
-            StartGame();
+            // ★기준을 이미 쟀으면 바로 시작, 아니면 연습부터
+            if (calibration != null && !calibration.HasBaseline())
+            {
+                calibration.onFinished = StartGame;   // 연습이 끝나면 게임 시작
+                calibration.StartCalibration();
+            }
+            else
+            {
+                if (calibration != null) myCoughMax = calibration.myCoughMax;
+                StartGame();
+            }
         }
     }
 

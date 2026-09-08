@@ -1225,6 +1225,7 @@ MonoBehaviour:
   sway: {fileID: 671885415}
   seedPrefab: {fileID: 8819033365583019876, guid: bcc603862f480c44480c7c1e4e27b1ac, type: 3}
   seedSpawnPoint: {fileID: 1275863830}
+  calibration: {fileID: 1773061380}
   stage3: {fileID: 21300000, guid: 57b4043cc29213249b095d03585c7db7, type: 3}
   stage2: {fileID: 21300000, guid: 50a71618b90402743afd0eeb5ee6ab02, type: 3}
   stage1: {fileID: 21300000, guid: 42c7530bbacf1cc4480b71c89abd9992, type: 3}
@@ -1302,7 +1303,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 700, y: -450}
+  m_AnchoredPosition: {x: -650, y: 400}
   m_SizeDelta: {x: 800, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1661992719
@@ -1352,8 +1353,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 60
-  m_fontSizeBase: 60
+  m_fontSize: 80
+  m_fontSizeBase: 80
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1414,6 +1415,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1773061378}
   - component: {fileID: 1773061379}
+  - component: {fileID: 1773061380}
   m_Layer: 0
   m_Name: MicManager
   m_TagString: Untagged
@@ -1449,7 +1451,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fftSize: 2048
-  dbFloor: 60
+  dbFloor: 80
   peakHoldSec: 1.2
   peakFall: 40
   sampleRate: 44100
@@ -1480,6 +1482,31 @@ MonoBehaviour:
   showDebug: 1
   debugPos: {x: 10, y: 10}
   debugWidth: 420
+--- !u!114 &1773061380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1773061377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df1d59f61e5ffd448a100eaedaa335b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mic: {fileID: 1773061379}
+  guideText: {fileID: 1479875011}
+  progressText: {fileID: 1661992719}
+  waitSec: 2
+  noiseSec: 2
+  doneSec: 1.5
+  practiceReps: 2
+  thrRatio: 0.5
+  noiseTooLoud: 55
+  retryPauseSec: 1.5
+  micNoise: 0
+  myCoughMax: 0
+  ready: 0
 --- !u!1 &1806680259
 GameObject:
   m_ObjectHideFlags: 0

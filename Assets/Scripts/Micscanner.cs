@@ -306,6 +306,9 @@ public class MicScanner : MonoBehaviour
     {
         int pos = Microphone.GetPosition(device);
 
+        // ★임시 진단
+        if (Time.frameCount % 60 == 0) Debug.Log("[Mic] pos = " + pos);
+
         if (pos < 0 || clipSamples <= 0) return false;
 
         // 버퍼를 통째로 읽어 온다 (고리 이음매를 직접 다루는 것보다 안전하다)
