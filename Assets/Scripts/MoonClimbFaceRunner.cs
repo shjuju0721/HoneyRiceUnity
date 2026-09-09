@@ -39,6 +39,24 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     public Vector2[] latestMouth31 = new Vector2[31];
     public bool latestHasMouth = false;
 
+    // ============================================================
+    //  ★★스테이지10(떠먹여주기)용: 머리 각도 + 코끝
+    //     턱 당기기(chin tuck) 판정에 쓴다.
+    //
+    //  ⚠pitch는 두 가지를 함께 내려보낸다(latestPitchA / latestPitchB).
+    //    행렬이 전치되어 담겼는지 알 수 없어서다.
+    //    ★고개를 끄덕여 보고 제대로 반응하는 쪽을 실측으로 고를 것.
+    //    ★"숙이면 +인지 −인지" 부호도 반드시 실측할 것 —
+    //      원본 코드에도 주석이 서로 반대로 적혀 있었다.
+    // ============================================================
+    public float latestPitchA = 0f;        // ⓐ 원본 식 그대로 (m21, m22)
+    public float latestPitchB = 0f;        // ⓑ 전치된 경우 (m12, m22)
+    public bool latestHasPitch = false;    // ⚠얼굴을 잃으면 false만 내려가고
+                                           //   값은 낡은 채 남는다. 쓰는 쪽에서 반드시 확인할 것.
+
+    public Vector2 latestNose = Vector2.zero;   // 코끝(1번 점), 0~1 정규화. y는 위가 0
+    public bool latestHasNose = false;
+
     public override void Stop()
     {
       base.Stop();
@@ -48,6 +66,11 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
     protected override IEnumerator Run()
     {
+      // ★★스테이지10 턱 당기기용 — 얼굴 변환 행렬을 켠다.
+      //   이걸 켜야 머리 각도(pitch)를 받을 수 있다.
+      //   ⚠GetFaceLandmarkerOptions를 부르기 전에 켜야 적용된다.
+      config.OutputFacialTransformationMatrixes = true;
+
       Debug.Log($"Delegate = {config.Delegate}");
       Debug.Log($"Image Read Mode = {config.ImageReadMode}");
       Debug.Log($"Running Mode = {config.RunningMode}");
@@ -195,6 +218,23 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       latestHasLip = FaceBlendshapeReader.FillInnerLip(result, latestInnerLip);
       latestHasMouth = FaceBlendshapeReader.FillMouth31(result, latestMouth31);   // ★스테이지8용
 
+      // ★★스테이지10용: 머리 각도 + 코끝
+      float pa, pb;
+      latestHasPitch = FaceBlendshapeReader.GetHeadPitch(result, out pa, out pb);
+
+      if (latestHasPitch)
+      {
+        latestPitchA = pa;
+        latestPitchB = pb;
+      }
+
+      Vector2 nose;
+      latestHasNose = FaceBlendshapeReader.GetNoseTip(result, out nose);
+
+      if (latestHasNose)
+      {
+        latestNose = nose;
+      }
     }
   }
 }
