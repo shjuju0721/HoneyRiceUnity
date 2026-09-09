@@ -1,13 +1,22 @@
 using UnityEngine;
 
-public class LRCalTest : MonoBehaviour
+// 스테이지10 시작 흐름 — 안내 패널 → 시작하기 → 게임
+public class FeedingTest : MonoBehaviour
 {
-    public TongueLRCalibration cal;
-    public JellySortGame game;
+    public FeedingGame game;
+    public GameObject introPanel;   // 안내 패널
 
-    void Update()
+    void Start()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) cal.StartCalibration();
-        if (Input.GetKeyDown(KeyCode.G)) game.StartGame();
+        // 시작하면 안내 패널부터 보여준다
+        if (introPanel != null) introPanel.SetActive(true);
+    }
+
+    // 버튼이 부를 함수
+    public void OnStartClicked()
+    {
+        if (introPanel != null) introPanel.SetActive(false);
+
+        if (game != null) game.StartGame();
     }
 }
