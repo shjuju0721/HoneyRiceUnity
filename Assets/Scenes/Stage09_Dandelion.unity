@@ -1451,7 +1451,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fftSize: 2048
-  dbFloor: 80
+  dbFloor: 50
   peakHoldSec: 1.2
   peakFall: 40
   sampleRate: 44100
