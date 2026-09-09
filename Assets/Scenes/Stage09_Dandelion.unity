@@ -946,6 +946,11 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
   latestHasMouth: 0
+  latestPitchA: 0
+  latestPitchB: 0
+  latestHasPitch: 0
+  latestNose: {x: 0, y: 0}
+  latestHasNose: 0
 --- !u!1 &1095621365
 GameObject:
   m_ObjectHideFlags: 0
