@@ -129,10 +129,10 @@ TextureImporter:
       name: Toko_Icorn_0
       rect:
         serializedVersion: 2
-        x: 17
-        y: 9
-        width: 31
-        height: 45
+        x: 98
+        y: 8
+        width: 324
+        height: 484
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

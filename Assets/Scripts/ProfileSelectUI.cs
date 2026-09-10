@@ -112,6 +112,8 @@ public class ProfileSelectUI : MonoBehaviour
             {
                 avatarButtons[i].onClick.AddListener(() => PickAvatar(idx));
 
+                AddHover(avatarButtons[i].gameObject);   // ★추가
+
                 // 캐릭터 그림 넣기
                 Image img = avatarButtons[i].GetComponent<Image>();
 
@@ -297,21 +299,16 @@ public class ProfileSelectUI : MonoBehaviour
             }
         }
 
-        // ★고른 캐릭터를 크고 진하게, 나머지는 작고 흐리게
+        // ★고른 캐릭터만 크게. 투명하게 하지 않는다 — 흐리면 잘 안 보인다
         for (int i = 0; i < avatarButtons.Length; i++)
         {
             if (avatarButtons[i] == null) continue;
 
-            bool on = (i == pickedAvatar);
+            HoverGrow h = avatarButtons[i].GetComponent<HoverGrow>();
 
-            avatarButtons[i].transform.localScale = Vector3.one * (on ? 1.15f : 0.9f);
-
-            Image img = avatarButtons[i].GetComponent<Image>();
-
-            if (img != null)
+            if (h != null)
             {
-                // 안 고른 것은 흐리게
-                img.color = on ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+                h.SetPicked(i == pickedAvatar);
             }
         }
     }
@@ -358,9 +355,11 @@ public class HoverGrow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 {
     public float scaleTo = 1.12f;
     public float speed = 12f;
+    public float pickedScale = 1.15f;   // ★고른 것은 계속 커져 있다
 
     private Vector3 baseScale = Vector3.one;
     private bool over = false;
+    private bool picked = false;
     private bool saved = false;
 
     void OnEnable()
@@ -372,7 +371,11 @@ public class HoverGrow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         }
 
         over = false;
-        transform.localScale = baseScale;
+    }
+
+    public void SetPicked(bool on)
+    {
+        picked = on;
     }
 
     public void OnPointerEnter(PointerEventData e)
@@ -387,7 +390,12 @@ public class HoverGrow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     void Update()
     {
-        Vector3 target = over ? baseScale * scaleTo : baseScale;
+        float mul = 1f;
+
+        if (picked) mul = pickedScale;
+        if (over) mul = scaleTo;          // 커서를 올리면 그게 우선
+
+        Vector3 target = baseScale * mul;
 
         float k = 1f - Mathf.Exp(-Time.unscaledDeltaTime * speed);
 
