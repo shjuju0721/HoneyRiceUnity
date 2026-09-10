@@ -32,6 +32,7 @@ public class RopePullGame : MonoBehaviour
     private bool isFinished = false;         // 전체 완료했는지
     // 세트 완료 후, 입을 한 번 풀어야 다음 세트가 시작되도록 하는 잠금장치
     private bool waitingForRelease = false;
+    private float maxPress = 0f;
 
     void Update()
     {
@@ -43,6 +44,8 @@ public class RopePullGame : MonoBehaviour
 
         // 러너가 미리 뽑아둔 값을 그냥 평균냄 (리스트를 안 건드리므로 안전)
         float pressValue = (faceRunner.latestMouthPressLeft + faceRunner.latestMouthPressRight) / 2f;
+
+        if (pressValue > maxPress) maxPress = pressValue;
 
         // --- 세트 완료 후 잠금 상태: 입을 풀어야 해제 ---
         if (waitingForRelease)
@@ -106,6 +109,8 @@ public class RopePullGame : MonoBehaviour
         if (completedSets >= totalSets)
         {
             isFinished = true;
+
+            RecordStore.Save(2, completedSets, maxPress);   // ★추가
 
             if (completePanel != null)
             {

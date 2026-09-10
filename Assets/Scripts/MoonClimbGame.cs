@@ -34,6 +34,7 @@ public class MoonClimbGame : MonoBehaviour
     private int currentStep = 0;        // 지금 몇 번째 칸에 있는지
     private bool isMouthOpen = false;   // 지금 입이 벌어진 상태인지 (디바운스용)
     private bool isJumping = false;         // 지금 뛰는 중인지 (중복 입력 막기)
+    private float maxJaw = 0f;          // ★이 판에서 가장 크게 벌린 값
 
        void Start()
     {
@@ -82,6 +83,9 @@ public class MoonClimbGame : MonoBehaviour
         }
 
         float jawOpen = faceRunner.latestJawOpen;
+
+        // ★게임 중 실제 최대치 (연습값 복사 금지)
+        if (jawOpen > maxJaw) maxJaw = jawOpen;
 
         // --- 히스테리시스 디바운스 ---
         // 닫힌 상태에서 openThreshold를 넘으면 → 벌린 것으로 인정, 한 칸 오르기
@@ -140,6 +144,8 @@ public class MoonClimbGame : MonoBehaviour
         if (currentStep >= totalSteps)
         {
             Debug.Log("달에 도착했습니다!");
+
+            RecordStore.Save(1, currentStep, maxJaw);   // ★추가
 
             if (completePanel != null)
             {

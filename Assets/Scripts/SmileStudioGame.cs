@@ -37,6 +37,7 @@ public class SmileStudioGame : MonoBehaviour
     private float waitTimer = 0f;
     private bool isArmed = true;
     private bool isFinished = false;
+    private float maxSmile = 0f;
 
     private List<Texture2D> photos = new List<Texture2D>();
 
@@ -48,6 +49,8 @@ public class SmileStudioGame : MonoBehaviour
         }
 
         float smile = faceRunner.latestSmile;
+
+        if (smile > maxSmile) maxSmile = smile;
 
         // --- 촬영 직후 대기 중 ---
         if (waitTimer > 0f)
@@ -212,6 +215,8 @@ public class SmileStudioGame : MonoBehaviour
     void Finish()
     {
         isFinished = true;
+
+        RecordStore.Save(5, photoCount, maxSmile);   // ★추가
 
         UpdateGauge(0f);
 

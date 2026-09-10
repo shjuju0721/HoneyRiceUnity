@@ -124,6 +124,14 @@ public class DandelionGame : MonoBehaviour
     // ★프리뷰의 시작 버튼이나 다시하기 버튼이 부른다
     public void StartGame()
     {
+
+        // ★연습에서 잰 내 기침 세기를 반드시 가져온다
+        //   ⚠이게 빠져서 연습 직후 첫 판만 기본값 90으로 등급이 계산되던 버그
+        if (calibration != null && calibration.HasBaseline())
+        {
+            myCoughMax = calibration.myCoughMax;
+        }
+
         flowerIdx = 0;
         blowsDone = 0;
 
@@ -314,7 +322,7 @@ public class DandelionGame : MonoBehaviour
 
         int left = Mathf.Max(1, Mathf.CeilToInt(timer));
 
-        ShowStatus("참 잘했어요!\n잠깐 쉬어요" + left);
+        ShowStatus("참 잘했어요!\n잠깐 쉬어요 " + left);
 
         if (timer <= 0f)
         {
@@ -335,6 +343,9 @@ public class DandelionGame : MonoBehaviour
         if (timer <= 0f)
         {
             phase = Phase.Idle;
+
+            // ★판 기록 저장 — 기침 횟수와 이 판 최고 세기
+            RecordStore.Save(9, coughSoft + coughMid + coughHard, peakCough);
 
             if (completePanel != null)
             {

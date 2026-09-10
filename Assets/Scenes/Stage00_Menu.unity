@@ -1322,7 +1322,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "1. \uD480\uC232\uACFC \uAD6C\uB984\n\uC785 \uBC8C\uB9AC\uAE30"
+  m_text: "1. \uB2EC \uD1A0\uB07C\n\uC785 \uBC8C\uB9AC\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
   m_sharedMaterial: {fileID: -7516198333637994165, guid: a99e4d5fc02a35f49a295420e11c3289, type: 2}
@@ -1572,7 +1572,7 @@ MonoBehaviour:
   descText: {fileID: 883797681}
   previewImage: {fileID: 1479201965}
   stages:
-  - title: "1. \uB2EC \uD1A0\uB07C "
+  - title: "1. \uB2EC \uD1A0\uB07C"
     description: "\uB2EC\uBE5B\uC744 \uB530\uB77C \uACC4\uB2E8\uC774 \uB193\uC600\uC5B4\uC694.\n\uC785\uC744
       \uD06C\uAC8C \uBC8C\uB9B4 \uB54C\uB9C8\uB2E4 \uD55C \uCE78\uC529!\n\uB2EC\uAE4C\uC9C0
       \uD568\uAED8 \uC62C\uB77C\uAC00 \uBCFC\uAE4C\uC694?"
@@ -1593,7 +1593,8 @@ MonoBehaviour:
   - title: " 4. \uD3AD\uADC4 \uC2AC\uB77C\uC774\uB529 "
     description: "\uC544\uAE30 \uD3AD\uADC4\uC774 \uC9D1\uC5D0 \uAC00\uB294 \uAE38\uC774\uC5D0\uC694.\n\uBCFC\uC744
       \uBE75\uBE75\uD558\uAC8C \uBD80\uD480\uB9AC\uBA74\n\uC5BC\uC74C \uC704\uB97C
-      \uC329\u2015 \uBBF8\uB044\uB7EC\uC838 \uAC11\uB2C8\uB2E4."
+      \uC329\u2015 \uBBF8\uB044\uB7EC\uC838 \uAC11\uB2C8\uB2E4.\n\uC785\uC220\uC744
+      \uC624\uBBC0\uB9AC\uBA74\uC11C \uBCFC\uC744 \uBD80\uD480\uB824 \uC8FC\uC138\uC694!"
     previewImage: {fileID: 21300000, guid: da394b4d57ff17f40b1dd9d4ad01ead5, type: 3}
     sceneName: Stage04_Penguin
   - title: "5. \uBBF8\uC18C \uC0AC\uC9C4"

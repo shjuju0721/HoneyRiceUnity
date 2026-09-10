@@ -87,7 +87,7 @@ public class MicScanner : MonoBehaviour
 
     // ===== ★진단 표시 =====
     [Header("★진단 표시")]
-    public bool showDebug = true;
+    public bool showDebug = false;
     public Vector2 debugPos = new Vector2(10f, 10f);
     public float debugWidth = 420f;
 
@@ -305,9 +305,6 @@ public class MicScanner : MonoBehaviour
     bool ReadWindow()
     {
         int pos = Microphone.GetPosition(device);
-
-        // ★임시 진단
-        if (Time.frameCount % 60 == 0) Debug.Log("[Mic] pos = " + pos);
 
         if (pos < 0 || clipSamples <= 0) return false;
 

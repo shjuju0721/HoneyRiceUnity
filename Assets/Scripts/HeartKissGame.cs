@@ -45,6 +45,7 @@ public class HeartKissGame : MonoBehaviour
 
     private Transform activeHeart = null;    // ★지금 날아가는 중인 하트를 기억
     private float fillTimer = 0f;            // ★색 하트를 되돌릴 때까지 남은 시간
+    private float maxFunnel = 0f;
 
     // ===== 게임 시작 시 빈 하트로 맞춰두기 =====
     void Start()
@@ -63,6 +64,8 @@ public class HeartKissGame : MonoBehaviour
         UpdateFillTimer();     // ★색 하트를 되돌릴 시간이 됐는지 확인
 
         float funnelValue = faceRunner.latestMouthFunnel;
+
+        if (funnelValue > maxFunnel) maxFunnel = funnelValue;
 
         // --- 충전 시작 ---
         if (!isCharging && funnelValue > chargeThreshold)
@@ -177,6 +180,8 @@ public class HeartKissGame : MonoBehaviour
     void ShowCompletePanel()
     {
         isFinished = true;
+
+        RecordStore.Save(3, successCount, maxFunnel);   // ★추가
 
         if (completePanel != null)
         {

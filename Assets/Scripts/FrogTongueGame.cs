@@ -51,6 +51,7 @@ public class FrogTongueGame : MonoBehaviour
     private float lastDistance = 0f;    // 진단용
     private bool canCatch = true;       // ★지금 잡을 수 있는 상태인가 (재장전)
     private float deadTimer = 0f;       // ★죽은 연출 남은 시간
+    private float maxRatio = 0f;
 
     void Start()
     {
@@ -100,6 +101,8 @@ public class FrogTongueGame : MonoBehaviour
     {
         float jaw = faceRunner.latestJawOpen;
         float ratio = tongueScanner.ratio;
+
+        if (ratio > maxRatio) maxRatio = ratio;
 
         if (!isTongueOut)
         {
@@ -234,6 +237,8 @@ public class FrogTongueGame : MonoBehaviour
     {
         isFinished = true;
         isTongueOut = false;
+
+        RecordStore.Save(6, caughtCount, maxRatio);   // ★추가
 
         if (fly != null)
         {

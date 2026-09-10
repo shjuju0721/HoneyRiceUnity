@@ -384,6 +384,10 @@ public class JellySortGame : MonoBehaviour
     {
         panelShown = true;
 
+        // ★판 기록 저장 — 좌우를 따로 남긴다(비대칭 추이용)
+        RecordStore.Save(7, leftDone, leftBest, "left");
+        RecordStore.Save(7, rightDone, rightBest, "right");
+
         if (completePanel != null) completePanel.SetActive(true);
 
         // 큰 글자는 지운다 (패널과 겹치지 않게)

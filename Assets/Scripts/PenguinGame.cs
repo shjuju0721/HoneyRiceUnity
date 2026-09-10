@@ -45,6 +45,8 @@ public class PenguinGame : MonoBehaviour
     private float slideTimer = 0f;       // 미끄러진 지 얼마나 됐나
 
     private int launchCount = 0;         // 몇 번 발사했나
+    private float maxCheek = 0f;
+    private float maxPucker = 0f;
 
     void Start()
     {
@@ -69,6 +71,9 @@ public class PenguinGame : MonoBehaviour
         // 평소보다 얼마나 변했는지 계산
         float cheekDelta = faceRunner.latestCheekWidth - cheekBaseline;
         float puckerDelta = faceRunner.latestMouthPucker - puckerBaseline;
+
+        if (cheekDelta > maxCheek) maxCheek = cheekDelta;
+        if (puckerDelta > maxPucker) maxPucker = puckerDelta;
 
         // --- 부풀리기 시작: 볼과 입술을 둘 다 넘어야 인정 ---
         if (!isCharging && cheekDelta > cheekThreshold && puckerDelta > puckerThreshold)
@@ -202,6 +207,10 @@ public class PenguinGame : MonoBehaviour
     void Finish()
     {
         isFinished = true;
+
+        // ★볼과 입술을 따로 기록 (5-6)
+        RecordStore.Save(4, launchCount, maxCheek, "cheek");
+        RecordStore.Save(4, launchCount, maxPucker, "lip");
 
         if (statusText != null)
         {

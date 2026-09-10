@@ -44,6 +44,7 @@ public class RunnerGame : MonoBehaviour
     public float dirHoldSec = 0.3f;            // ★같은 방향을 이만큼 유지해야 접수
                                                //   웹의 UD_DIR_SEC와 같음
     public float tiltSec = 0.9f;               // 갸우뚱 시간
+    public float wrongLockSec = 0.9f;          // ★오답 뒤 이만큼 판정을 쉰다
     public float hintSec = 2.4f;               // "앗! 반대예요~" 안내 시간
     public bool autoStart = true;              // ★씬이 열리면 바로 시작
                                                //   (프리뷰에서 "시작하기"를 눌러 들어오므로)
@@ -115,6 +116,7 @@ public class RunnerGame : MonoBehaviour
     // 연출 시계
     private float slideTimer = 0f;
     private float tiltTimer = 0f;
+    private float lockTimer = 0f;              // ★오답 잠금 남은 시간
     private float hintTimer = 0f;
     private float finishTimer = 0f;
 
@@ -174,6 +176,7 @@ public class RunnerGame : MonoBehaviour
         dirTimer = 0f;
         hintTimer = 0f;
         tiltTimer = 0f;
+        lockTimer = 0f;
 
         // 남아 있는 집이 있으면 치운다 (다시하기 대비)
         if (houseObj != null)
@@ -263,6 +266,12 @@ public class RunnerGame : MonoBehaviour
         if (hintTimer > 0f)
         {
             hintTimer -= Time.deltaTime;
+        }
+
+        // --- ★오답 잠금 시계 ---
+        if (lockTimer > 0f)
+        {
+            lockTimer -= Time.deltaTime;
         }
 
         // --- 갸우뚱 연출 ---
@@ -358,6 +367,14 @@ public class RunnerGame : MonoBehaviour
             return;
         }
 
+        // --- ★오답 직후에는 잠깐 판정을 쉰다 ---
+        if (lockTimer > 0f)
+        {
+            lastDir = 0;
+            dirTimer = 0f;
+            return;
+        }
+
         // --- 방향을 얼마나 유지했나 ---
         int dir = scanner.Direction();
 
@@ -440,6 +457,7 @@ public class RunnerGame : MonoBehaviour
             // ★오답 — 실패가 아니다. 갸우뚱하고 다시 기다린다
             wrongCount++;
 
+            lockTimer = wrongLockSec;          // ★추가
             tiltTimer = tiltSec;
             hintTimer = hintSec;
 
@@ -679,6 +697,9 @@ public class RunnerGame : MonoBehaviour
         {
             phase = Phase.Idle;
 
+            // ★판 기록 저장 (최대값 없이 횟수만)
+            RecordStore.SaveCountOnly(8, upCount + downCount);
+
             if (completePanel != null)
             {
                 completePanel.SetActive(true);
@@ -764,7 +785,12 @@ public class RunnerGame : MonoBehaviour
     {
         if (countText != null)
         {
-            countText.text = index + " / " + order.Count;
+
+            // ★"끝낸 개수"가 아니라 "지금 몇 번째"를 보여준다 (스테이지9와 통일)
+            //   다 끝나면 11 / 10이 되지 않게 Min으로 막는다
+            int now = Mathf.Min(index + 1, order.Count);
+
+            countText.text = now + " / " + order.Count;
         }
     }
 }

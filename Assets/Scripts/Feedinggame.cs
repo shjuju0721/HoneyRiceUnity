@@ -443,6 +443,9 @@ public class FeedingGame : MonoBehaviour
     {
         panelShown = true;
 
+        // ★판 기록 저장 (완료한 술 수)
+        RecordStore.SaveCountOnly(10, totalSpoons);
+
         if (completePanel != null) completePanel.SetActive(true);
         if (onCleared != null) onCleared();
     }
