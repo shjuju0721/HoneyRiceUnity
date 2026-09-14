@@ -38,6 +38,7 @@ public class ProfileSelectUI : MonoBehaviour
     public Button addSlotButton;
     public Button editButton;
     public TMP_Text editButtonText;
+    public GameObject doneButton;          // ★편집 끝내는 버튼 (편집 중에만 보임)
 
     [Header("만드는 화면")]
     public GameObject createPanel;
@@ -78,6 +79,14 @@ public class ProfileSelectUI : MonoBehaviour
         // 버튼 연결 (인스펙터에서 안 해도 되게 코드로)
         if (addSlotButton != null) addSlotButton.onClick.AddListener(OpenCreate);
         if (editButton != null) editButton.onClick.AddListener(ToggleEdit);
+
+        // ★편집 끝내기 — 편집 중에만 보인다
+        if (doneButton != null)
+        {
+            Button b = doneButton.GetComponent<Button>();
+
+            if (b != null) b.onClick.AddListener(ToggleEdit);
+        }
         if (createButton != null) createButton.onClick.AddListener(DoCreate);
         if (cancelButton != null) cancelButton.onClick.AddListener(CloseCreate);
         if (confirmYes != null) confirmYes.onClick.AddListener(DoDelete);
@@ -183,6 +192,12 @@ public class ProfileSelectUI : MonoBehaviour
         if (editButtonText != null)
         {
             editButtonText.text = editMode ? "다 했어요" : "편집";
+        }
+
+        // ★편집 중에만 완료 버튼을 보여 준다
+        if (doneButton != null)
+        {
+            doneButton.SetActive(editMode);
         }
 
         // --- 제목 ---

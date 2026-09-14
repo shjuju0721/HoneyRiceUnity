@@ -1,0 +1,871 @@
+/* ============================================================
+   꿀떡꿀떡 기록 대시보드 — style.css
+   - 고령자용: 본문 18px 이상, 카드 제목 22px 이상, 큰 숫자 48px 이상
+   - 웹폰트·CDN 없음. 시스템 글꼴만.
+   - 판정·경고색 없음. 빨강 계열은 포인트로만.
+   ============================================================ */
+
+:root {
+  --bg:        #FBEEE6;
+  --card:      #FFFFFF;
+  --card-tint: #F4F8F7;
+  --ink:       #4A3B33;
+  --ink-soft:  #74645A;   /* 원래 #8A7A70 — 줄무늬 배경 위에서도 대비 4.5:1 이상이 되도록 조금 진하게 */
+  --line:      #E6D9CF;
+
+  --coral:     #E87B5E;
+  --teal:      #8FBFD0;
+  --pink:      #F2C4CE;
+  --lilac:     #D9CCE3;
+  --leaf:      #7FB069;
+  --leaf-dark: #5E8C4F;
+  --fruit:     #E86A5E;
+  --soil:      #A8836B;
+
+  /* 파생색 — 글자용(대비 확보)과 옅은 바탕용 */
+  --teal-ink:  #3E7F96;   /* 청록 선의 글자 짝 (흰 바탕 위에서 읽히도록 어둡게) */
+  --coral-ink: #D9634A;   /* 큰 숫자용 코럴 (흰 바탕 대비 3:1 이상) */
+  --stripe-a:  #F8E6E7;   /* 배경 세로 줄무늬 (연분홍) */
+  --stripe-b:  #F3EAF3;   /* 배경 세로 줄무늬 (연보라) */
+  --track:     #F3EDE9;   /* 막대 바탕 */
+  --cell:      #FAF6F3;   /* 캘린더 빈 칸 */
+  --cal-1:     #F9E1E6;   /* 캘린더 1판 */
+  --cal-2:     #F2C4CE;   /* 캘린더 2판 */
+  --cal-3:     #F3B0AA;   /* 캘린더 3판 */
+  --cal-4:     #F0957D;   /* 캘린더 4판 이상 (진갈색 글자 대비 4.5:1 이상) */
+
+  --radius: 16px;
+  --shadow: 0 2px 10px rgba(74, 59, 51, 0.06);
+  --font: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+  /* 제목·큰 숫자용 — 파일을 못 불러오면 뒤의 시스템 글꼴로 자연스럽게 대체 */
+  --font-display: "EF Jejudoldam", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+}
+
+/* 제주돌담체 — 같은 폴더의 파일을 상대경로로 (CDN 아님) */
+@font-face {
+  font-family: "EF Jejudoldam";
+  src: url("EF_jejudoldam(TTF).ttf") format("truetype");
+  font-weight: 400 700;   /* 굵기가 하나뿐인 글꼴 — 굵게 요청해도 가짜 굵기(번짐)를 만들지 않게 범위로 선언 */
+  font-style: normal;
+  font-display: swap;     /* 글꼴이 늦게 오면 시스템 글꼴로 먼저 보여 준다 */
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 56px,
+    var(--stripe-a) 56px 112px,
+    transparent 112px 168px,
+    var(--stripe-b) 168px 224px
+  );
+  word-break: keep-all;
+}
+
+/* ---------- 공통 ---------- */
+h1, h2, h3, p { margin: 0; }
+
+/* 숫자는 언제나 시스템 글꼴 — 제주돌담체는 4·7, 6 같은 숫자가 구분되지 않는다 */
+.num {
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--teal-ink);
+  outline-offset: 3px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.card-head { margin-bottom: 16px; }
+
+.card-hint {
+  margin-top: 6px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.stat-number {
+  font-family: var(--font);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--coral-ink);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-unit {
+  font-size: 26px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* ---------- 샘플 데이터 띠 · 기록 파일 안내 띠 ---------- */
+.sample-banner,
+.broken-banner {
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.sample-banner {
+  background: #FFF3C4;
+  border-bottom: 2px solid #E8D48A;
+}
+
+.broken-banner {
+  background: var(--card-tint);
+  border-bottom: 3px solid var(--teal);
+}
+
+/* ---------- 헤더 ---------- */
+.page-header {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 36px 24px 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.brand-mark {
+  width: 68px;
+  height: 68px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  padding: 3px;
+}
+
+.avatar-img.is-pixel { image-rendering: pixelated; }
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.page-sub {
+  margin-top: 4px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+/* ---------- 전체 배치 ---------- */
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 1280px) {
+  .dashboard {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "summary  summary"
+      "growth   growth"
+      "trend    trend"
+      "balance  calendar"
+      "bars     calendar";
+    align-items: start;
+  }
+  .summary-row   { grid-area: summary; }
+  .growth-card   { grid-area: growth; }
+  .trend-card    { grid-area: trend; }
+  .balance-card  { grid-area: balance; }
+  .calendar-card { grid-area: calendar; }
+  .bars-card     { grid-area: bars; }
+}
+
+@media (max-width: 767px) {
+  .page-header { padding: 24px 16px 12px; }
+  .dashboard { padding: 0 16px 32px; gap: 16px; }
+  .summary-row { grid-template-columns: 1fr; gap: 16px; }
+  .card { padding: 20px; }
+  .page-title { font-size: 28px; }
+}
+
+/* ---------- 요약 숫자 카드 ---------- */
+.stat-card {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.stat-value {
+  margin-top: 8px;
+  min-height: 62px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.stat-text {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--coral-ink);
+}
+
+.stat-desc {
+  margin-top: 8px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+/* ---------- 성장 카드 ---------- */
+.growth-card {
+  background: var(--card-tint);
+  display: grid;
+  grid-template-columns: minmax(260px, 400px) minmax(0, 460px);
+  justify-content: center;
+  gap: 56px;
+  align-items: center;
+  padding: 32px 36px;
+}
+
+.growth-figure {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.growth-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 식물이 바람에 살짝 흔들리는 정도 — 깜빡임 없음 */
+.plant-sway {
+  transform-origin: 160px 210px;
+  animation: plant-sway 7s ease-in-out infinite;
+}
+
+@keyframes plant-sway {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50%      { transform: rotate(1.2deg); }
+}
+
+.growth-stage {
+  font-family: var(--font-display);
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.growth-total {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.growth-total-label {
+  font-size: 22px;
+  color: var(--ink-soft);
+}
+
+.growth-next {
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.growth-steps {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+}
+
+.growth-step {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.growth-step.is-done { background: var(--leaf); }
+
+@media (max-width: 767px) {
+  .growth-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+  .growth-figure { max-width: 280px; }
+  .growth-total { justify-content: center; }
+  .growth-steps { justify-content: center; }
+  .growth-stage { font-size: 30px; }
+}
+
+/* ---------- 탭 · 기간 버튼 ---------- */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 10px 20px;
+  min-height: 52px;
+  border-radius: 999px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.tab:hover { border-color: var(--coral); }
+
+.tab.is-empty { opacity: 0.5; }
+.tab.is-empty[aria-pressed="true"] { opacity: 0.8; }
+
+.tab[aria-pressed="true"] {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: var(--ink);
+}
+
+.tabs-note {
+  margin-top: 10px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.chart-head {
+  margin-top: 22px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.chart-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.chart-sub {
+  margin-top: 4px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.range-buttons {
+  display: inline-flex;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.range-btn {
+  font-size: 18px;
+  padding: 10px 18px;
+  min-height: 50px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range-btn + .range-btn { border-left: 2px solid var(--line); }
+
+.range-btn[aria-pressed="true"] {
+  background: var(--teal);
+  font-weight: 700;
+}
+
+/* ---------- 차트 공통 ---------- */
+.chart-legend {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 18px;
+}
+
+.chart-legend:empty { display: none; }
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.chart-box {
+  position: relative;
+  margin-top: 10px;
+  width: 100%;
+  min-height: 340px;
+}
+
+.chart-box-short { min-height: 300px; }
+
+.chart-box-stack { min-height: 0; }
+
+.chart-panel + .chart-panel { margin-top: 12px; }
+
+.chart-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.chart-panel-box {
+  position: relative;
+  width: 100%;
+  min-height: 250px;
+}
+
+.chart-box svg {
+  display: block;
+  max-width: 100%;
+}
+
+.chart-box text {
+  font-family: var(--font);
+  font-size: 16px;
+  fill: var(--ink);
+}
+
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  font-size: 22px;
+  color: var(--ink-soft);
+  background: var(--card-tint);
+  border-radius: 12px;
+}
+
+.chart-hit { cursor: pointer; }
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px 14px;
+  font-size: 18px;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 16px));
+}
+
+.chart-tooltip strong { font-weight: 700; }
+
+.chart-caption {
+  margin-top: 8px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.chart-note {
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+.chart-note:empty { display: none; }
+
+.chart-recent {
+  margin-top: 12px;
+  font-size: 20px;
+}
+
+.chart-recent:empty,
+.chart-caption:empty { display: none; }
+
+/* ---------- 좌우 균형 카드 ---------- */
+.notice {
+  background: var(--card-tint);
+  border-left: 6px solid var(--teal);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.balance-values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.balance-value {
+  background: var(--card-tint);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.balance-label {
+  display: block;
+  font-size: 20px;
+  color: var(--ink-soft);
+}
+
+.balance-number {
+  font-family: var(--font);
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.balance-value.is-left  .balance-number { color: #B8705E; }   /* 채도 낮춘 산호색 */
+.balance-value.is-right .balance-number { color: #5E8FA0; }   /* 채도 낮춘 청록 — 왼쪽과 비슷한 명도 */
+
+.balance-date {
+  margin-top: 10px;
+  font-size: 18px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .balance-values { grid-template-columns: 1fr; }
+}
+
+/* ---------- 활동 캘린더 ---------- */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cal-btn {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-btn svg { width: 28px; height: 28px; }
+
+.cal-btn:hover:not(:disabled) { border-color: var(--coral); }
+
+.cal-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.cal-month {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: 18px;
+  color: var(--ink-soft);
+  padding: 4px 0;
+}
+
+.cal-cell {
+  position: relative;
+  min-height: 66px;
+  border-radius: 12px;
+  background: var(--cell);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--ink-soft);
+}
+
+.cal-num { display: block; }
+
+.cal-cell.is-blank { background: transparent; }
+
+.cal-day {
+  width: 100%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.cal-day:hover { transform: translateY(-2px); }
+
+.cal-day.level-1 { background: var(--cal-1); }
+.cal-day.level-2 { background: var(--cal-2); }
+.cal-day.level-3 { background: var(--cal-3); }
+.cal-day.level-4 { background: var(--cal-4); }
+
+.cal-day[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+
+.cal-cell.is-today { box-shadow: inset 0 0 0 2px var(--teal-ink); }
+
+.cal-count {
+  display: block;
+  align-self: flex-start;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.cal-legend {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+
+.cal-swatch.level-1 { background: var(--cal-1); }
+.cal-swatch.level-2 { background: var(--cal-2); }
+.cal-swatch.level-3 { background: var(--cal-3); }
+.cal-swatch.level-4 { background: var(--cal-4); }
+
+.cal-detail { margin-top: 18px; }
+
+.cal-detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.cal-detail-hint {
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.cal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.cal-item {
+  background: var(--card-tint);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.cal-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cal-item-name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.cal-item-time {
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.cal-item-line {
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  /* 칸이 좁아 "N판" 글자는 숨긴다 — 색과 아래 목록으로 알 수 있고, 읽어 주는 이름에는 남아 있다 */
+  .cal-grid { gap: 4px; }
+  .cal-cell { min-height: 56px; padding: 4px; align-items: center; justify-content: center; }
+  .cal-count { display: none; }
+  .cal-btn { width: 50px; height: 50px; }
+  .cal-month { font-size: 22px; }
+}
+
+/* ---------- 게임별 판 수 ---------- */
+.bars {
+  display: grid;
+  gap: 12px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 84px;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+}
+
+.bar-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.bar-track {
+  height: 30px;
+  border-radius: 15px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 15px;
+  background: var(--coral);
+  min-width: 30px;
+  transition: width 0.7s ease;
+}
+
+.bar-count {
+  text-align: right;
+  font-weight: 700;
+}
+
+.bar-row.is-empty .bar-track {
+  background: transparent;
+  border: 2px dashed var(--line);
+}
+
+.bar-row.is-empty .bar-name,
+.bar-row.is-empty .bar-count {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+@media (max-width: 480px) {
+  .bar-row {
+    grid-template-columns: 118px 1fr 64px;
+    font-size: 18px;
+    gap: 8px;
+  }
+}
+
+/* ---------- 꼬리말 ---------- */
+.page-footer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+  text-align: center;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+/* ---------- 움직임 줄이기 설정을 켠 사람 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .plant-sway { animation: none; }
+  .bar-fill { transition: none; }
+  .cal-day { transition: none; }
+}

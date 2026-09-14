@@ -49,14 +49,6 @@ public class DandelionGame : MonoBehaviour
     public float goalWaitSec = 2.5f;       // 완성 뒤 완료 패널까지
     public bool autoStart = true;          // 씬이 열리면 바로 시작
 
-    // ============================================================
-    //  ★[임시] 키보드로 기침 흉내내기 (테스트용)
-    //  ⚠조용한 방에서 계속 기침하기 어려워 만든 임시 장치.
-    //    실제 배포 전에 반드시 끌 것(체크 해제).
-    // ============================================================
-    [Header("★[임시] 키보드 테스트")]
-    public bool useKeyboardTest = false;   // 켜면 숫자키로 기침 흉내
-
     [Header("홀씨 개수 (기침 세기별)")]
     public int seedsSoft = 6;              // 살살
     public int seedsMid = 12;              // 보통
@@ -189,7 +181,7 @@ public class DandelionGame : MonoBehaviour
     void UpdateReady(MicScanner.CoughEvent cough, MicScanner.RejectEvent reject)
     {
         // --- 마이크가 준비 안 됐으면 그 안내가 우선 ---
-        if (!useKeyboardTest && (mic == null || !mic.micReady))
+        if (mic == null || !mic.micReady)
         {
             string why = (mic != null && mic.micDenied) ? "마이크가 막혀 있어요"
                        : (mic != null && mic.micFailed) ? "마이크를 찾을 수 없어요"
@@ -199,26 +191,7 @@ public class DandelionGame : MonoBehaviour
             return;
         }
 
-        // --- ★[임시] 키보드 테스트 ---
-        //   1 = 살살 / 2 = 보통 / 3 = 세게
-        if (useKeyboardTest)
-        {
-            int fakeLv = 0;
-
-            if (Input.GetKeyDown(KeyCode.Alpha1)) fakeLv = 1;
-            else if (Input.GetKeyDown(KeyCode.Alpha2)) fakeLv = 2;
-            else if (Input.GetKeyDown(KeyCode.Alpha3)) fakeLv = 3;
-
-            if (fakeLv > 0)
-            {
-                if (fakeLv >= 3) coughHard++;
-                else if (fakeLv == 2) coughMid++;
-                else coughSoft++;
-
-                Blow(fakeLv);
-                return;
-            }
-        }
+        
 
         // --- 기침이 인정됐다면! ---
         if (cough != null)
